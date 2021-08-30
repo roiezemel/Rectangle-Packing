@@ -11,7 +11,7 @@ sb5 hardrectilinear 4 (0, 0) (0, 129) (208, 129) (208, 0)
 sb6 hardrectilinear 4 (0, 0) (0, 108) (123, 108) (123, 0)
 sb7 hardrectilinear 4 (0, 0) (0, 179) (235, 179) (235, 0)
 sb8 hardrectilinear 4 (0, 0) (0, 193) (152, 193) (152, 0)
-sb9 hardrectilinear 4 (0, 0) (0, 196) (126, 196) (126, 0)
+sb9 ardrectilinear 4 (0, 0) (0, 196) (126, 196) (126, 0)  //// this line is ignored
 
 p1 terminal
 p2 terminal
