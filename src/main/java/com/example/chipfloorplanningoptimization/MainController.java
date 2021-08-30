@@ -19,6 +19,7 @@ import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public class MainController implements Painter {
@@ -57,10 +58,7 @@ public class MainController implements Painter {
         // In the future we will only use the gui to watch the algorithms' results,
         // therefore this function will become redundant
         try {
-            Map<String, Rectangle> blocks = IOManager.extractBlocks(new File("C:\\Users\\OWNER\\Documents\\מגשימים\\chip-floor-planning-optimization\\src\\main\\java\\com\\example\\chipfloorplanningoptimization\\in.txt"));
-            // The given path is the absolute path of the input file,
-            // change it to the current absolute path of the in.txt file. This problem will be fixed once
-            // we read a file from the resources folder or at least read it from a relative path.
+            Map<String, Rectangle> blocks = IOManager.extractBlocks(new File(Objects.requireNonNull(getClass().getResource("in.txt")).getFile()));
 
             // The next few lines just organize the blocks from the input file into a convenient grid view
             int xMax = 30;
