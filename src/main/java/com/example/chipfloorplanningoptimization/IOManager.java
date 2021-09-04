@@ -4,10 +4,7 @@ import javafx.scene.shape.Rectangle;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +33,29 @@ public class IOManager {
         }
         myReader.close();
         return map;
+    }
+
+    public static List<List<String>> parseNet(File file) throws FileNotFoundException {
+        Scanner myReader = new Scanner(file);
+        List<List<String>> result = new LinkedList<>();
+        List<String> current = null;
+        while (myReader.hasNextLine()) {
+            String data = myReader.nextLine().trim();
+            if (data.contains("NetDegree")) {
+                if (current != null && current.size() > 1)
+                    result.add(current);
+                current = new LinkedList<>();
+            }
+            else if (current != null) {
+                String[] parts = data.split(" ");
+                if (!parts[0].startsWith("p")) {
+                    current.add(parts[0]);
+                }
+            }
+        }
+        if (current != null)
+            result.add(current);
+        return result;
     }
 
     private static Rectangle parseRect(String blockLine) {

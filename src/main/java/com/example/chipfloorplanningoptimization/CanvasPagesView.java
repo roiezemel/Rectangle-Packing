@@ -32,12 +32,12 @@ public class CanvasPagesView {
     private final Text headline;
     private final Rectangle boundingRect;
 
-    public CanvasPagesView(Painter painter, int numPages, Stage stage, Group root, String title) {
+    public CanvasPagesView(Painter painter, int numPages, Stage stage, Group root) {
         this.painter = painter;
         this.numPages = numPages;
         this.stage = stage;
         this.root = root;
-        headline = new Text(title);
+        headline = new Text();
         headline.setFill(Color.WHITE);
         headline.setFont(Font.font("Ariel", FontWeight.BOLD, 30));
         headline.setX(50);
@@ -61,8 +61,9 @@ public class CanvasPagesView {
     private void addComponents() {
         Button next = new Button("Next");
         Button back = new Button("Back");
+        Button toggleWires = new Button("Toggle Wires");
 
-        locateButtons(next, back, 50);
+        locateButtons(next, back, toggleWires, 50);
 
         next.setOnAction(e -> {
             if (index < numPages - 1) {
@@ -78,8 +79,15 @@ public class CanvasPagesView {
             }
         });
 
+        toggleWires.setOnAction(e -> {
+            clear();
+            painter.onToggleWires();
+            painter.draw(index);
+        });
+
         this.root.getChildren().add(next);
         this.root.getChildren().add(back);
+        this.root.getChildren().add(toggleWires);
         this.root.getChildren().add(headline);
         this.root.getChildren().add(scaleText);
         this.root.getChildren().add(boundingRect);
@@ -90,10 +98,14 @@ public class CanvasPagesView {
             boundingRect.setHeight(getHeight() - 110);
             clear();
             painter.draw(index);
-            locateButtons(next, back, 50);
+            locateButtons(next, back, toggleWires, 50);
         };
         stage.widthProperty().addListener(stageSizeListener);
         stage.heightProperty().addListener(stageSizeListener);
+    }
+
+    public void setTitle(String title) {
+        headline.setText(title);
     }
 
     public double getWidth() {
@@ -104,11 +116,13 @@ public class CanvasPagesView {
         return stage.getScene().getHeight();
     }
 
-    private void locateButtons(Button next, Button back, int padding) {
+    private void locateButtons(Button next, Button back, Button toggleWires, int padding) {
         next.setLayoutX(stage.getWidth() - 20 - padding - next.getWidth());
         next.setLayoutY(stage.getHeight() - 30 - padding);
         back.setLayoutX(padding);
         back.setLayoutY(stage.getHeight() - 30 - padding);
+        toggleWires.setLayoutX(stage.getWidth() / 2 - toggleWires.getWidth() / 2);
+        toggleWires.setLayoutY(stage.getHeight() - 30 - padding);
     }
 
     public void drawShape(Shape shape) {
