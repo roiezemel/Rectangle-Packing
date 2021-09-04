@@ -4,6 +4,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
@@ -39,54 +40,47 @@ public class MainController implements Painter {
     @Override
     public void draw(int index) { // Draw a page according to the current page index
         // this function currently only demonstrates the use of the draw method and the pages
-        if (index == 0) { // page 1
-            showBlocks();
-        }
-
-        else { // page 2 - currently just a rectangle and a circle,
-            // only for demonstration purpose
-            Rectangle rect = new Rectangle(200, 100, 100, 100);
-            canvas.drawShape(rect);
-            Circle c = new Circle(300, 300, 30);
-            canvas.drawShape(c);
-        }
-
+        String[] files = {"n10.txt", "n30.txt"};
+        showBlocks(files[index]);
     }
 
-    private void showBlocks() {
+    private void showBlocks(String blocksFile) {
         // This function isn't important since it only shows the blocks in a nice grid.
         // In the future we will only use the gui to watch the algorithms' results,
         // therefore this function will become redundant
         try {
-            Map<String, Rectangle> blocks = IOManager.extractBlocks(new File(Objects.requireNonNull(getClass().getResource("in.txt")).getFile()));
+            Map<String, Rectangle> blocks = IOManager.extractBlocks(new File(Objects.requireNonNull(getClass().getResource(blocksFile)).getFile()));
 
             // The next few lines just organize the blocks from the input file into a convenient grid view
-            int xMax = 30;
-            int yMax = 70;
+            int xMax = 0;
+            int yMax = 0;
             double heightMax = 0;
             for (String blockName : blocks.keySet()) {
                 Rectangle block = blocks.get(blockName);
 
-                if (xMax + block.getWidth() >= canvas.getWidth() - 5) {
-                    xMax = 50;
-                    yMax += heightMax + 5;
+                if (xMax + block.getWidth() >= canvas.getWidth()) {
+                    xMax = 0;
+                    yMax += heightMax;
                     heightMax = 0;
                 }
 
                 block.setX(block.getX() + xMax);
                 block.setY(block.getY() + yMax);
+                block.setFill(Color.DARKSLATEGRAY);
+                block.setStroke(Color.SKYBLUE);
 
-                xMax += block.getWidth() + 5;
+                xMax += block.getWidth();
 
                 if (block.getHeight() > heightMax)
                     heightMax = block.getHeight();
-
-                canvas.drawShape(block); // draw a shape
-
-                Text nameTitle = new Text(block.getX() + block.getWidth() / 2, block.getY() + block.getHeight() / 2, blockName);
+            }
+            canvas.drawFloorPlan(blocks.values().stream().toList());
+            blocks.forEach((s, r) -> {
+                Text nameTitle = new Text(r.getX() + r.getWidth() / 2, r.getY() + r.getHeight() / 2, s);
+                nameTitle.setFont(Font.font("Ariel", FontWeight.NORMAL, 10));
                 nameTitle.setFill(Color.WHITE);
                 canvas.drawShape(nameTitle);
-            }
+            });
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
