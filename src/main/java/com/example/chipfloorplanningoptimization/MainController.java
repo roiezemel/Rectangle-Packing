@@ -86,6 +86,9 @@ public class MainController implements Painter {
             }
 
             canvas.drawFloorPlan(blocks.values().stream().toList());
+
+            drawWires(blocks, netsFile);
+
             blocks.forEach((s, r) -> {
                 Text nameTitle = new Text(r.getX() + r.getWidth() / 2, r.getY() + r.getHeight() / 2, s);
                 nameTitle.setFont(Font.font("Ariel", FontWeight.NORMAL, 10));
@@ -93,7 +96,6 @@ public class MainController implements Painter {
                 canvas.drawShape(nameTitle);
             });
 
-            drawWires(blocks, netsFile);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
