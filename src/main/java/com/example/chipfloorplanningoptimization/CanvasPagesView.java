@@ -2,7 +2,6 @@ package com.example.chipfloorplanningoptimization;
 
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -13,9 +12,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class CanvasPagesView {
 

@@ -3,7 +3,6 @@ module com.example.chipfloorplanningoptimization {
     requires javafx.fxml;
     requires javafx.graphics;
 
-
-    opens com.example.chipfloorplanningoptimization to javafx.fxml;
     exports com.example.chipfloorplanningoptimization;
+    opens com.example.chipfloorplanningoptimization to javafx.fxml;
 }
