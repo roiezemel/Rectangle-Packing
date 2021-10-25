@@ -8,8 +8,8 @@ import java.util.List;
 
 public class Floorplan {
 
-    private Point min; // (min(xs), min(ys))
-    private Point max; // (max(xs), max(ys))
+    private Point min = new Point(1000000, 1000000); // (min(xs), min(ys))
+    private Point max = new Point(-1, -1); // (max(xs), max(ys))
     private final List<CModule> modules;
 
     /**
@@ -34,24 +34,18 @@ public class Floorplan {
      * @param module new module
      */
     public void addModule(CModule module) {
-        // The loop may not be required, if the
-        // first point of each module is set
-        // to be the bottom-left point
-        for (int i = 0; i < 4; i++) {
-            Point p = module.getPoints()[i];
-            double xMax = max.x(), yMax = max.y(), xMin = min.x(), yMin = min.y();
-            if (p.x() > xMax)
-                xMax = p.x();
-            else if (p.x() < xMin)
-                xMin = p.x();
-            if (p.y() > yMax)
-                yMax = p.y();
-            else if (p.y() < yMin)
-                yMin = p.y();
-            min = new Point(xMin, yMin);
-            max = new Point(xMax, yMax);
-        }
-
+        Point p = module.getPosition();
+        double xMax = max.x(), yMax = max.y(), xMin = min.x(), yMin = min.y();
+        if (p.x() > xMax)
+            xMax = p.x();
+        else if (p.x() < xMin)
+            xMin = p.x();
+        if (p.y() > yMax)
+            yMax = p.y();
+        else if (p.y() < yMin)
+            yMin = p.y();
+        min = new Point(xMin, yMin);
+        max = new Point(xMax, yMax);
         modules.add(module);
     }
 
@@ -62,6 +56,10 @@ public class Floorplan {
      */
     public double area() {
         return (max.x() - min.x()) * (max.y() - min.y());
+    }
+
+    public List<CModule> getModules() {
+        return modules;
     }
 
     // TODO: implement cost function

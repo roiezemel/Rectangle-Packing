@@ -5,4 +5,6 @@ module com.example.chipfloorplanningoptimization {
 
     exports com.example.chipfloorplanningoptimization;
     opens com.example.chipfloorplanningoptimization to javafx.fxml;
+    exports com.example.chipfloorplanningoptimization.gui;
+    opens com.example.chipfloorplanningoptimization.gui to javafx.fxml;
 }

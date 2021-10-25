@@ -1,5 +1,10 @@
 package com.example.chipfloorplanningoptimization;
 
+import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
+import com.example.chipfloorplanningoptimization.gui.CanvasPagesView;
+import com.example.chipfloorplanningoptimization.gui.IOManager;
+import com.example.chipfloorplanningoptimization.gui.Painter;
+import com.example.chipfloorplanningoptimization.representation.Floorplan;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -11,6 +16,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,21 +28,32 @@ public class MainController implements Painter {
 //    private Group root;
     private CanvasPagesView canvas;
     private boolean wiresVisible = false;
+    private Floorplan[] floorplans;
 
-    public void start(Stage stage) { // This is called just before the window shows up
+    public void start(Stage stage, Floorplan... floorplans) { // This is called just before the window shows up
         Group root = new Group();
         stage.getScene().setRoot(root);
-        this.canvas = new CanvasPagesView(this, 6, stage, root);
+        this.floorplans = floorplans;
+        this.canvas = new CanvasPagesView(this, 6 + floorplans.length, stage, root);
         this.canvas.firstPage();
     }
 
     @Override
     public void draw(int index) { // Draw a page according to the current page index
-        // this function currently only demonstrates the use of the draw method and the pages
-        String[] blocks = {"n10.txt", "n30.txt", "n50.txt", "n100.txt", "n200.txt",  "n300.txt"};
-        String[] nets = {"nets10.txt", "nets30.txt", "nets50.txt", "nets100.txt", "nets200.txt", "nets300.txt"};
-        showBlocks(blocks[index], nets[index]);
-        canvas.setTitle(blocks[index]);
+
+        if (index < floorplans.length) {
+            canvas.drawFloorplan(floorplans[index]);
+            canvas.setTitle("Floorplan #" + (index + 1));
+        }
+
+        else {
+            index -= floorplans.length;
+            // this function currently only demonstrates the use of the draw method and the pages
+            String[] blocks = {"n10.txt", "n30.txt", "n50.txt", "n100.txt", "n200.txt", "n300.txt"};
+            String[] nets = {"nets10.txt", "nets30.txt", "nets50.txt", "nets100.txt", "nets200.txt", "nets300.txt"};
+            showBlocks(blocks[index], nets[index]);
+            canvas.setTitle(blocks[index]);
+        }
 
     }
 
@@ -76,17 +93,9 @@ public class MainController implements Painter {
                     heightMax = block.getHeight();
             }
 
-            canvas.drawFloorPlan(blocks.values().stream().toList());
+            canvas.drawFloorplan(blocks.values().stream().toList(), blocks.keySet().stream().toList(), false);
 
             drawWires(blocks, netsFile);
-
-            blocks.forEach((s, r) -> {
-                Text nameTitle = new Text(r.getX() + r.getWidth() / 2, r.getY() + r.getHeight() / 2, s);
-                nameTitle.setFont(Font.font("Ariel", FontWeight.NORMAL, 10));
-                nameTitle.setFill(Color.WHITE);
-                canvas.drawShape(nameTitle);
-            });
-
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();

@@ -1,5 +1,7 @@
-package com.example.chipfloorplanningoptimization;
+package com.example.chipfloorplanningoptimization.gui;
 
+import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
+import com.example.chipfloorplanningoptimization.representation.Floorplan;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
@@ -12,6 +14,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class CanvasPagesView {
@@ -126,7 +129,28 @@ public class CanvasPagesView {
         root.getChildren().add(shape);
     }
 
-    public void drawFloorPlan(List<Rectangle> plan) {
+    public void drawFloorplan(Floorplan floorplan) {
+        List<Rectangle> blocks = new LinkedList<>();
+        List<String> names = new LinkedList<>();
+        for (CModule module : floorplan.getModules()) {
+            Rectangle block = new Rectangle(
+                    module.getPosition().x(),
+                    module.getPosition().y(),
+                    module.getWidth(),
+                    module.getHeight());
+            block.setFill(Color.DARKSLATEGRAY);
+            block.setStroke(Color.SKYBLUE);
+            blocks.add(block);
+            names.add(module.getName());
+        }
+        drawFloorplan(blocks, names, true);
+    }
+
+    private double transformOrigin(double moduleY, double moduleHeight) {
+        return boundingRect.getHeight() - 6 - moduleY - moduleHeight;
+    }
+
+    public void drawFloorplan(List<Rectangle> plan, List<String> names, boolean transformOrigin) {
         double x0 = boundingRect.getX() + 3, y0 = boundingRect.getY() + 3,
                 width = boundingRect.getWidth() - 6, height = boundingRect.getHeight() - 6;
 
@@ -139,21 +163,34 @@ public class CanvasPagesView {
                 yMax = y;
         }
 
+        double averageHeight = 0;
         double scale = Math.min(width / xMax, height / yMax);
         for (Rectangle r : plan) {
             r.setX(r.getX() * scale);
             r.setY(r.getY() * scale);
             r.setWidth(r.getWidth() * scale);
             r.setHeight(r.getHeight() * scale);
+            averageHeight += r.getHeight();
         }
 
+        averageHeight /= plan.size();
         scaleText.setText("Scale: " + ((int)(scale * 100)) / 100.);
 
-        plan.forEach(r -> {
+       for (int i = 0; i < plan.size(); i++) {
+           Rectangle r = plan.get(i);
+            if (transformOrigin)
+                r.setY(transformOrigin(r.getY(), r.getHeight()));
+
             r.setX(r.getX() + x0);
             r.setY(r.getY() + y0);
             drawShape(r);
-        });
+
+            Text nameTitle = new Text(r.getX() + r.getWidth() / 2, r.getY() + r.getHeight() / 2, names.get(i));
+            double fontSize = Math.min(r.getHeight() / 10, averageHeight);
+            nameTitle.setFont(Font.font("Ariel", FontWeight.NORMAL, fontSize));
+            nameTitle.setFill(Color.WHITE);
+            drawShape(nameTitle);
+        }
     }
 
     private void clear() {

@@ -4,21 +4,45 @@ package com.example.chipfloorplanningoptimization.abstract_structures;
  * Chip-Module
  * Represents a module on a chip
  */
-public abstract class CModule {
+public class CModule {
 
-    private final Point[] points = new Point[4];
+    private Point position;
+    private double width, height;
+    private String name = "";
 
     public CModule() {}
 
-    public CModule(Point... points) {
-        setPoints(points);
+    public CModule(double width, double height, String name) {
+        this.width = width;
+        this.height = height;
+        this.name = name;
     }
 
-    public Point[] getPoints() {
-        return points;
+    public Point getPosition() {
+        return position;
     }
 
-    public void setPoints(Point... points) {
-        System.arraycopy(points, 0, this.points, 0, 4);
+    public void setPosition(Point position) {
+        this.position = position;
+    }
+
+    public double getWidth() {
+        return width;
+    }
+
+    public void setWidth(double width) {
+        this.width = width;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
+    }
+
+    public String getName() {
+        return name;
     }
 }

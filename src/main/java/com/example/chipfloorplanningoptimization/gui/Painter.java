@@ -1,4 +1,4 @@
-package com.example.chipfloorplanningoptimization;
+package com.example.chipfloorplanningoptimization.gui;
 
 public interface Painter {
 
