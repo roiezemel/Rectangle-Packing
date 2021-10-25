@@ -28,6 +28,11 @@ public class Floorplan {
         modules.forEach(this::addModule);
     }
 
+    public Floorplan(Floorplan f) {
+        this();
+        f.getModules().forEach(m -> addModule(new CModule(m)));
+    }
+
     /**
      * Add module to the floorplan.
      * Complexity: O(1)

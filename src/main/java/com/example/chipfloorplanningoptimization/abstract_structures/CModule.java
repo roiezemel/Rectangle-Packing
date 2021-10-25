@@ -12,6 +12,13 @@ public class CModule {
 
     public CModule() {}
 
+    public CModule(CModule c) {
+        this.position = c.position;
+        this.width = c.width;
+        this.height = c.height;
+        this.name = c.name;
+    }
+
     public CModule(double width, double height, String name) {
         this.width = width;
         this.height = height;

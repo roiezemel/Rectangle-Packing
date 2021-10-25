@@ -186,7 +186,7 @@ public class CanvasPagesView {
             drawShape(r);
 
             Text nameTitle = new Text(r.getX() + r.getWidth() / 2, r.getY() + r.getHeight() / 2, names.get(i));
-            double fontSize = Math.min(r.getHeight() / 10, averageHeight);
+            double fontSize = averageHeight / 10;
             nameTitle.setFont(Font.font("Ariel", FontWeight.NORMAL, fontSize));
             nameTitle.setFill(Color.WHITE);
             drawShape(nameTitle);

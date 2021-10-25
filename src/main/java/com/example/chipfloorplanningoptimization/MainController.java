@@ -4,6 +4,7 @@ import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
 import com.example.chipfloorplanningoptimization.gui.CanvasPagesView;
 import com.example.chipfloorplanningoptimization.gui.IOManager;
 import com.example.chipfloorplanningoptimization.gui.Painter;
+import com.example.chipfloorplanningoptimization.representation.BTree;
 import com.example.chipfloorplanningoptimization.representation.Floorplan;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
@@ -41,9 +42,15 @@ public class MainController implements Painter {
     @Override
     public void draw(int index) { // Draw a page according to the current page index
 
-        if (index < floorplans.length) {
+        if (index == 1) {
+            Floorplan f = BTree.unpack(BTree.packRandomly(new Floorplan(floorplans[1])));
+            canvas.drawFloorplan(f);
+            canvas.setTitle("Cost: " + f.area());
+        }
+
+        else if (index < floorplans.length) {
             canvas.drawFloorplan(floorplans[index]);
-            canvas.setTitle("Floorplan #" + (index + 1));
+            canvas.setTitle("Cost: " + floorplans[index].area());
         }
 
         else {

@@ -7,14 +7,58 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-public class BTree {
+public class BTree implements Representation {
 
     private BNode<CModule> root;
 
     public BTree() {}
 
+    public BTree(BTree t) {
+        if (t.root == null)
+            return;
+        this.root = new BNode<>(new CModule(t.root.getValue()));
+        copyTree(t.root, this.root);
+    }
+
     public BTree(BNode<CModule> root) {
         this.root = root;
+    }
+
+    /**
+     * Helper to copy another tree
+     * @param pos current node on given tree
+     * @param copyTo current node to of the copy-to tree
+     */
+    private void copyTree(BNode<CModule> pos, BNode<CModule> copyTo) {
+        if (pos.hasLeft()) {
+            copyTo.setLeft(new BNode<>(new CModule(pos.getLeft().getValue())));
+            copyTree(pos.getLeft(), copyTo.getLeft());
+        }
+
+        if (pos.hasRight()) {
+            copyTo.setRight(new BNode<>(new CModule(pos.getRight().getValue())));
+            copyTree(pos.getRight(), copyTo.getRight());
+        }
+    }
+
+    @Override
+    public void op1() {
+
+    }
+
+    @Override
+    public void op2() {
+
+    }
+
+    @Override
+    public void op3() {
+
+    }
+
+    @Override
+    public Floorplan unpack() {
+        return unpack(this);
     }
 
     /**
@@ -33,6 +77,15 @@ public class BTree {
         return result;
     }
 
+    /**
+     * This function is used for recursion. It handles a sub-tree:
+     * - First it calculates the current module's position and adds it to the floorplan result.
+     * - Then it recursively applies itself on both the left and right subtrees.
+     * @param x X value of the current module
+     * @param pos Current node (sub-tree)
+     * @param result result floorplan
+     * @param contour a helper structure for an efficient calculation of the Y values
+     */
     private static void unpack(double x, BNode<CModule> pos, Floorplan result, LinkedList<Point> contour) {
         if (pos == null)
             return;
@@ -89,7 +142,7 @@ public class BTree {
      */
     public static BTree packRandomly(Floorplan f) {
         if (f.getModules().isEmpty())
-            return null;
+            return new BTree();
         BNode<CModule> root = new BNode<>(f.getModules().get(0));
         BNode<CModule> pos = root;
         for (int i = 1; i < f.getModules().size(); i++) {
@@ -103,5 +156,4 @@ public class BTree {
 
         return new BTree(root);
     }
-
 }

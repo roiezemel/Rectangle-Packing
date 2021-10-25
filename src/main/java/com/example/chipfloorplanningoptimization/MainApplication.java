@@ -17,7 +17,7 @@ public class MainApplication extends Application {
         launch(args);
     }
 
-    private static Floorplan createFloorplan() {
+    private static Floorplan[] createFloorplans() {
         CModule m1 = new CModule(9, 6, "1");
         CModule m2 = new CModule(6, 8, "2");
         CModule m3 = new CModule(6, 3, "3");
@@ -42,7 +42,11 @@ public class MainApplication extends Application {
 
        BTree tree = new BTree(n2);
 
-       return BTree.unpack(tree);
+       Floorplan result = tree.unpack();
+
+       Floorplan perturbed = BTree.unpack(BTree.packRandomly(new Floorplan(result)));
+
+       return new Floorplan[] {result, perturbed};
     }
 
     @Override
@@ -54,7 +58,8 @@ public class MainApplication extends Application {
         stage.setTitle("Floor Planning GUI");
         stage.setScene(scene);
 
-        ((MainController)loader.getController()).start(stage, createFloorplan());
+        Floorplan[] floorplans = createFloorplans();
+        ((MainController)loader.getController()).start(stage, floorplans);
         stage.show();
     }
 
