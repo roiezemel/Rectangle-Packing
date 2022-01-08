@@ -20,4 +20,5 @@ public interface Representation {
      */
     Floorplan unpack();
 
+    void copy (Representation oldRepresentation);
 }
