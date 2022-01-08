@@ -1,12 +1,14 @@
 package com.example.chipfloorplanningoptimization.gui;
 
 import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
+import com.example.chipfloorplanningoptimization.abstract_structures.Point;
 import com.example.chipfloorplanningoptimization.representation.Floorplan;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
@@ -14,8 +16,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class CanvasPagesView {
 
@@ -129,34 +130,18 @@ public class CanvasPagesView {
         root.getChildren().add(shape);
     }
 
-    public void drawFloorplan(Floorplan floorplan) {
-        List<Rectangle> blocks = new LinkedList<>();
-        List<String> names = new LinkedList<>();
-        for (CModule module : floorplan.getModules()) {
-            Rectangle block = new Rectangle(
-                    module.getPosition().x(),
-                    module.getPosition().y(),
-                    module.getWidth(),
-                    module.getHeight());
-            block.setFill(Color.DARKSLATEGRAY);
-            block.setStroke(Color.SKYBLUE);
-            blocks.add(block);
-            names.add(module.getName());
-        }
-        drawFloorplan(blocks, names, true);
-    }
-
     private double transformOrigin(double moduleY, double moduleHeight) {
         return boundingRect.getHeight() - 6 - moduleY - moduleHeight;
     }
 
-    public void drawFloorplan(List<Rectangle> plan, List<String> names, boolean transformOrigin) {
+    public void drawFloorplan(Floorplan floorplanIn, boolean drawWires) {
+        Floorplan floorplan = new Floorplan(floorplanIn);
         double x0 = boundingRect.getX() + 3, y0 = boundingRect.getY() + 3,
                 width = boundingRect.getWidth() - 6, height = boundingRect.getHeight() - 6;
 
         double xMax = -1, yMax = -1;
-        for (Rectangle rect : plan) {
-            double x = rect.getX() + rect.getWidth(), y = rect.getY() + rect.getHeight();
+        for (CModule rect : floorplan.getModules()) {
+            double x = rect.getPosition().x() + rect.getWidth(), y = rect.getPosition().y() + rect.getHeight();
             if (x > xMax)
                 xMax = x;
             if (y > yMax)
@@ -165,32 +150,65 @@ public class CanvasPagesView {
 
         double averageHeight = 0;
         double scale = Math.min(width / xMax, height / yMax);
-        for (Rectangle r : plan) {
-            r.setX(r.getX() * scale);
-            r.setY(r.getY() * scale);
+        for (CModule r : floorplan.getModules()) {
+            r.setPosition(new Point(r.getPosition().x() * scale, r.getPosition().y() * scale));
             r.setWidth(r.getWidth() * scale);
             r.setHeight(r.getHeight() * scale);
             averageHeight += r.getHeight();
         }
 
-        averageHeight /= plan.size();
+        averageHeight /= floorplan.getModules().size();
         scaleText.setText("Scale: " + ((int)(scale * 100)) / 100.);
 
-       for (int i = 0; i < plan.size(); i++) {
-           Rectangle r = plan.get(i);
-            if (transformOrigin)
-                r.setY(transformOrigin(r.getY(), r.getHeight()));
+       for (int i = 0; i < floorplan.getModules().size(); i++) {
+            CModule r = floorplan.getModules().get(i);
+            // Transform Origin:
+            r.setPosition(new Point(r.getPosition().x(), transformOrigin(r.getPosition().y(), r.getHeight())));
 
-            r.setX(r.getX() + x0);
-            r.setY(r.getY() + y0);
-            drawShape(r);
+            r.setPosition(new Point(r.getPosition().x() + x0, r.getPosition().y() + y0));
+            Rectangle block = new Rectangle(r.getPosition().x(), r.getPosition().y(), r.getWidth(), r.getHeight());
+            block.setFill(Color.DARKSLATEGRAY);
+            block.setStroke(Color.SKYBLUE);
+            drawShape(block);
 
-            Text nameTitle = new Text(r.getX() + r.getWidth() / 2, r.getY() + r.getHeight() / 2, names.get(i));
+            Text nameTitle = new Text(r.getPosition().x() + r.getWidth() / 2, r.getPosition().y() + r.getHeight() / 2, r.getName());
             double fontSize = averageHeight / 10;
             nameTitle.setFont(Font.font("Ariel", FontWeight.NORMAL, fontSize));
             nameTitle.setFill(Color.WHITE);
             drawShape(nameTitle);
         }
+
+        if (drawWires && floorplan.getNet() != null)
+           for (List<CModule> connectedModules : floorplan.getNet())
+               for (int i = 0; i < connectedModules.size() - 1; i++)
+                   drawLine(connectedModules.get(i), connectedModules.get(i + 1));
+       Rectangle boundingRect = getBoundingRect(floorplan);
+       boundingRect.setFill(Color.TRANSPARENT);
+       boundingRect.setStroke(Color.GRAY);
+        drawShape(boundingRect);
+    }
+
+    private Rectangle getBoundingRect(Floorplan floorplan) {
+        double minX = floorplan.getModules().stream().min(Comparator.comparingDouble(m -> m.getPosition().x())).get().getPosition().x();
+        double minY = floorplan.getModules().stream().min(Comparator.comparingDouble(m -> m.getPosition().y())).get().getPosition().y();
+
+
+        CModule right = floorplan.getModules().stream().max(Comparator.comparingDouble(m -> m.getPosition().x() + m.getWidth())).get();
+        CModule bottom = floorplan.getModules().stream().max(Comparator.comparingDouble(m -> m.getPosition().y() + m.getHeight())).get();
+        double maxX = right.getPosition().x() + right.getWidth();
+        double maxY = bottom.getPosition().y() + bottom.getHeight();
+        return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    private void drawLine(CModule r1, CModule r2) {
+        double x1 = r1.getPosition().x() + r1.getWidth() / 2,
+                y1 = r1.getPosition().y() + r1.getHeight() / 2,
+                x2 = r2.getPosition().x() + r2.getWidth() / 2,
+                y2 = r2.getPosition().y() + r2.getHeight() / 2;
+        Line line = new Line(x1, y1, x2, y2);
+        line.setStrokeWidth(2);
+        line.setOpacity(0.2);
+        drawShape(line);
     }
 
     private void clear() {

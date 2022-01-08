@@ -23,6 +23,7 @@ public class CModule {
         this.width = width;
         this.height = height;
         this.name = name;
+        this.position = new Point(0, 0);
     }
 
     public Point getPosition() {

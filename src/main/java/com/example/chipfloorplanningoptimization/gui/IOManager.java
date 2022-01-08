@@ -1,5 +1,7 @@
 package com.example.chipfloorplanningoptimization.gui;
 
+import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
+import com.example.chipfloorplanningoptimization.representation.Floorplan;
 import javafx.scene.shape.Rectangle;
 
 import java.io.File;
@@ -14,12 +16,33 @@ public class IOManager {
         This class takes care of managing the input/output files
      */
 
+    public static Floorplan extractBlocksToFloorplan(File blocksFile, File netFile) throws FileNotFoundException {
+        if (blocksFile == null)
+            return null;
+
+        Floorplan floorplan = new Floorplan();
+        Scanner myReader = new Scanner(blocksFile);
+        while (myReader.hasNextLine()) {
+            String data = myReader.nextLine();
+            if (data.contains("hardrectilinear")) {
+                Rectangle rect = parseRect(data);
+                String name = data.substring(0, data.indexOf(' '));
+                floorplan.addModule(new CModule(rect.getWidth(), rect.getHeight(), name));
+            }
+        }
+        myReader.close();
+        if (netFile != null)
+            floorplan.setNet(parseNet(netFile));
+        return floorplan;
+    }
+
     /**
      * Extract blocks (rectangles) from an input file.
      * @param file a file
      * @return map of block names to rectangles
      * @throws FileNotFoundException in case file hasn't been found
      */
+    @Deprecated
     public static Map<String, Rectangle> extractBlocks(File file) throws FileNotFoundException {
         Map<String, Rectangle> map = new HashMap<>();
         Scanner myReader = new Scanner(file);
@@ -35,7 +58,7 @@ public class IOManager {
         return map;
     }
 
-    public static List<List<String>> parseNet(File file) throws FileNotFoundException {
+    private static List<List<String>> parseNet(File file) throws FileNotFoundException {
         Scanner myReader = new Scanner(file);
         List<List<String>> result = new LinkedList<>();
         List<String> current = null;

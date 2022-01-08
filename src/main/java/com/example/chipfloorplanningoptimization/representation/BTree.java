@@ -3,13 +3,12 @@ package com.example.chipfloorplanningoptimization.representation;
 import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
 import com.example.chipfloorplanningoptimization.abstract_structures.Point;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 
 public class BTree implements Representation {
 
     private BNode<CModule> root;
+    private List<BNode> nodes; // TODO: update this list
 
     public BTree() {}
 
@@ -42,23 +41,68 @@ public class BTree implements Representation {
     }
 
     @Override
-    public void op1() {
+    public Runnable[] operations() {
+        // TODO: implement operations
+        return new Runnable[] {
+                () -> {
+                    BNode<CModule> node = nodes.get(new Random().nextInt(nodes.size()));
+                    double height = node.getValue().getHeight();
+                    node.getValue().setHeight(node.getValue().getWidth());
+                    node.getValue().setWidth(height);
+                }, // op1
+                () -> {
+                    BNode<CModule> randNode = nodes.get(new Random().nextInt(nodes.size()));
 
+                }, // op2
+                () -> {
+                    BNode<CModule> node = nodes.get(new Random().nextInt(nodes.size()));
+                    BNode<CModule> randNode = nodes.get(new Random().nextInt(nodes.size()));
+                    CModule module = node.getValue();
+                    node.setValue(randNode.getValue());
+                    randNode.setValue(module);
+                }  // op3
+        };
     }
 
     @Override
-    public void op2() {
+    public void pack(Floorplan floorplan) {
+        if (floorplan.getModules().isEmpty())
+            return;
 
+        Floorplan copyFloorplan = new Floorplan(floorplan);
+        Queue<CModule> modules = copyFloorplan.getModulesQueue();
+
+        BNode<CModule> beforeTree = new BNode<>(null);
+        BNode<CModule> pos = beforeTree;
+        double minimumWidth = (modules.size() / 2. * modules.peek().getWidth());
+        double widthBound = Math.random() * (Math.sqrt(copyFloorplan.area()) - minimumWidth) + minimumWidth;
+        while (!modules.isEmpty()) {
+            pos.setRight(new BNode<>(modules.poll()));
+            pos = pos.getRight();
+            double width = pos.getValue().getWidth();
+            widthBound = packLeft(pos, width, widthBound, modules);
+        }
+
+        this.root = beforeTree.getRight();
     }
 
-    @Override
-    public void op3() {
+    private double packLeft(BNode<CModule> pos, double width, double widthBound, Queue<CModule> modules) {
+        if (modules.isEmpty() || width + modules.peek().getWidth() > widthBound)
+            return width;
 
+        pos.setLeft(new BNode<>(modules.poll()));
+        return packLeft(pos.getLeft(), width + pos.getLeft().getValue().getWidth(), widthBound, modules);
     }
 
     @Override
     public Floorplan unpack() {
         return unpack(this);
+    }
+
+    public static BTree packFloorplan(Floorplan floorplan) {
+        BTree tree = new BTree();
+        tree.pack(floorplan);
+        return tree;
     }
 
     /**
@@ -132,28 +176,5 @@ public class BTree implements Representation {
         // Apply on children
         unpack(x + width, pos.getLeft(), result, contour); // left
         unpack(x, pos.getRight(), result, contour); // right
-    }
-
-    /**
-     * This function randomly packs a floorplan to a B* tree representation without any
-     * consideration of the modules' positions.
-     * @param f floorplan
-     * @return a B* Tree containing all modules randomly positioned.
-     */
-    public static BTree packRandomly(Floorplan f) {
-        if (f.getModules().isEmpty())
-            return new BTree();
-        BNode<CModule> root = new BNode<>(f.getModules().get(0));
-        BNode<CModule> pos = root;
-        for (int i = 1; i < f.getModules().size(); i++) {
-            BNode<CModule> currNode = new BNode<>(f.getModules().get(i));
-            if (Math.random() > 0.5)
-                pos.setLeft(currNode);
-            else
-                pos.setRight(currNode);
-            pos = currNode;
-        }
-
-        return new BTree(root);
     }
 }
