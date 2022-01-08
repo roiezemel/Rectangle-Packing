@@ -60,6 +60,9 @@ public class Floorplan {
     }
 
     public void setNet(List<List<String>> net) {
+        if (net == null)
+            return;
+
         this.net = new LinkedList<>();
         net.forEach(names -> {
             List<CModule> connectedModules = new LinkedList<>();
@@ -77,7 +80,9 @@ public class Floorplan {
         return net;
     }
 
-    private List<List<String>> getNameNet() {
+    public List<List<String>> getNameNet() {
+        if (net == null)
+           return null;
         List<List<String>> result = new LinkedList<>();
         net.forEach(connected -> result.add(new LinkedList<>() {{
             connected.forEach(module -> add(module.getName()));
@@ -94,6 +99,25 @@ public class Floorplan {
         return (max.x() - min.x()) * (max.y() - min.y());
     }
 
+    public double totalWireLength() {
+        if (net == null || net.isEmpty())
+            return 0;
+        double length = 0;
+        for (List<CModule> connectedModules : net) {
+            for (int i = 0; i < connectedModules.size() - 1; i++) {
+                CModule module1 = connectedModules.get(i);
+                CModule module2 = connectedModules.get(i + 1);
+
+                Point pos1 = new Point(module1.getPosition().x() + module1.getWidth() / 2,
+                        module1.getPosition().y() + module1.getHeight() / 2);
+                Point pos2 = new Point(module2.getPosition().x() + module2.getWidth() / 2,
+                        module2.getPosition().y() + module2.getHeight() / 2);
+                length += Point.distance(pos1, pos2);
+            }
+        }
+        return length;
+    }
+
     public List<CModule> getModules() {
         return modules;
     }
@@ -101,8 +125,6 @@ public class Floorplan {
     public Queue<CModule> getModulesQueue() {
         return (LinkedList<CModule>) modules;
     }
-
-    // TODO: implement cost function
 
     public Rectangle getBoundingBox() {
         return new Rectangle(min.x(), min.y(), max.x() - min.x(), max.y() - min.y());

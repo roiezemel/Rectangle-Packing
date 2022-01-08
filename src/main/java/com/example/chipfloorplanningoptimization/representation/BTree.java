@@ -9,6 +9,8 @@ public class BTree implements Representation {
 
     private BNode<CModule> root;
     private List<BNode> nodes; // TODO: update this list
+    private List<List<String>> net;
+
 
     public BTree() {}
 
@@ -83,6 +85,7 @@ public class BTree implements Representation {
             widthBound = packLeft(pos, width, widthBound, modules);
         }
 
+        this.net = floorplan.getNameNet();
         this.root = beforeTree.getRight();
     }
 
@@ -96,7 +99,9 @@ public class BTree implements Representation {
 
     @Override
     public Floorplan unpack() {
-        return unpack(this);
+        Floorplan floorplan = unpack(this);
+        floorplan.setNet(net);
+        return floorplan;
     }
 
     public static BTree packFloorplan(Floorplan floorplan) {
