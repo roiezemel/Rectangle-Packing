@@ -1,6 +1,8 @@
 package com.example.chipfloorplanningoptimization.representation;
 
-public interface Representation {
+import java.io.IOException;
+
+public interface Representation<T> {
 
     /**
      * Get all possible operations on the representation, needed to perturb it
@@ -20,5 +22,15 @@ public interface Representation {
      */
     Floorplan unpack();
 
-    void copy (Representation oldRepresentation);
+    /**
+     * @return a copy of the representation
+     */
+    T copy ();
+
+    /**
+     * Saves the representation in a file
+     */
+    void save(String path) throws IOException;
+
+
 }

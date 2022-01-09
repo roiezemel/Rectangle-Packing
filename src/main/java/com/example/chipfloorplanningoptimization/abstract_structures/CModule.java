@@ -53,4 +53,15 @@ public class CModule {
     public String getName() {
         return name;
     }
+
+    public String serialize() {
+        return "[" + name + "," + position.x() + "," + position.y() + "," + width + "," + height + "]";
+    }
+
+    public static CModule deserialize(String t) {
+        String[] data = t.substring(1, t.length() - 1).split(",");
+        CModule module = new CModule(Double.parseDouble(data[3]), Double.parseDouble(data[4]), data[0]);
+        module.setPosition(new Point(Double.parseDouble(data[1]), Double.parseDouble(data[2])));
+        return module;
+    }
 }

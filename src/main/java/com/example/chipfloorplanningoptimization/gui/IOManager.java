@@ -6,7 +6,10 @@ import javafx.scene.shape.Rectangle;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -103,6 +106,29 @@ public class IOManager {
         int width = vertices[1][0] - vertices[0][0];
         int height = vertices[1][1] - vertices[0][1];
         return new Rectangle(vertices[0][0], vertices[0][1], width, height);
+    }
+
+    public static <T> void saveList(String path, List<? extends T> list, Function<? super T, String> oneLineSerialize) throws IOException {
+        FileWriter writer = new FileWriter(path);
+        StringBuilder text = new StringBuilder();
+        for (T item : list) {
+            String append = oneLineSerialize.apply(item);
+            if (append.contains("\n"))
+                throw new IllegalArgumentException("oneLineSerialize should produce Strings " +
+                        "without newlines since newlines are used as separators!");
+            text.append(append).append("\n");
+        }
+        writer.write(text.toString());
+        writer.close();
+    }
+
+    public static <T> List<T> loadList(String path, Function<String, ? extends T> deserialize) throws FileNotFoundException {
+        Scanner myReader = new Scanner(new File(path));
+        List<T> list = new LinkedList<>();
+        while (myReader.hasNextLine()) {
+            list.add(deserialize.apply(myReader.nextLine()));
+        }
+        return list;
     }
 
 }

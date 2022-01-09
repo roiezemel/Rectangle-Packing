@@ -2,6 +2,8 @@ package com.example.chipfloorplanningoptimization;
 
 import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
 import com.example.chipfloorplanningoptimization.gui.IOManager;
+import com.example.chipfloorplanningoptimization.optimization.Optimizer;
+import com.example.chipfloorplanningoptimization.optimization.SimulatedAnnealing;
 import com.example.chipfloorplanningoptimization.representation.BNode;
 import com.example.chipfloorplanningoptimization.representation.BTree;
 import com.example.chipfloorplanningoptimization.representation.Floorplan;
@@ -14,6 +16,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -50,17 +53,12 @@ public class MainApplication extends Application {
         List<BNode<CModule>> nodes = new LinkedList<>() {{ add(n1); add(n2); add(n3); add(n4); add(n5); add(n6); }};
        BTree tree = new BTree(n1, nodes);
 
-        Floorplan[] floorplans = new Floorplan[10];
+        Floorplan[] floorplans = new Floorplan[8];
         floorplans[0] = tree.unpack();
 
-       tree.operations()[0].run();
-       floorplans[1] = tree.unpack();
-
-       tree.operations()[1].run();
-       floorplans[2] = tree.unpack();
-
-       tree.operations()[2].run();
-        floorplans[3] = tree.unpack();
+        Optimizer op = new SimulatedAnnealing(200,100,100, 1);
+        BTree optimizedTree = op.optimize(tree);
+        floorplans[1] = optimizedTree.unpack();
 
         String[] blocks = {"n10.txt", "n30.txt", "n50.txt", "n100.txt", "n200.txt", "n300.txt"};
         String[] nets = {"nets10.txt", "nets30.txt", "nets50.txt", "nets100.txt", "nets200.txt", "nets300.txt"};
@@ -69,7 +67,7 @@ public class MainApplication extends Application {
             Floorplan floorplan = getFloorplanFromFile(blocks[i], nets[i]);
             Floorplan p = BTree.packFloorplan(floorplan).unpack();
             p.setNet(Objects.requireNonNull(floorplan));
-            floorplans[i + 4] = p;
+            floorplans[i + 2] = p;
         }
        return floorplans;
     }

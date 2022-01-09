@@ -1,21 +1,20 @@
 package com.example.chipfloorplanningoptimization.optimization;
+import com.example.chipfloorplanningoptimization.representation.BTree;
 import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.util.Random;
 import java.lang.Math;
 
-public class SimulatedAnnealing {
+public class SimulatedAnnealing implements Optimizer{
 
     private double temperature;
-    private double final_temperature;
+    private final double finalTemperature;
+    private final int iterations;
+    private final double tempChange;
 
-    private int iterations;
-    private double tempChange;
-    public SimulatedAnnealing() {}
-
-    public SimulatedAnnealing(double temperature,double final_temperature, double tempChange, int iterations) {
+    public SimulatedAnnealing(double temperature,double finalTemperature, double tempChange, int iterations) {
         this.temperature = temperature;
-        this.final_temperature = final_temperature;
+        this.finalTemperature = finalTemperature;
         this.tempChange = tempChange;
         this.iterations = iterations;
     }
@@ -28,27 +27,27 @@ public class SimulatedAnnealing {
 
     /**
      * the loop that change the floorplan untill it's find a selution
-     * @param floorplan represntation
+     * @param initialSolution represntation
      * @return the represntation solution
      */
-    public Representation optimization (Representation floorplan){
-        Representation temp;
-        Cost cost = new Cost();
+    @Override
+    public <T extends Representation<T>> T optimize(T initialSolution) {
+        T temp;
+        Cost cost = new Cost(1, 20, initialSolution.copy());
         Random rand = new Random();
-        while (temperature > final_temperature) {
+        while (temperature > finalTemperature) {
             for (int i = 0; i < iterations; i++) {
-                temp.copy(floorplan);
-                floorplan.operations()[rand.nextInt(3)].run();
-                double rateChange = cost.evaluate(floorplan);
+                temp = initialSolution.copy();
+                initialSolution.operations()[1].run();
+                double rateChange = cost.evaluate(initialSolution);
                 double rateBefore = cost.evaluate(temp);
-                if (rateChange >= rateBefore && rand.nextDouble() > Math.exp(-(rateChange - rateBefore)/temperature))/* it's backward - if it's true the change is bad*/
-                {
-                  floorplan.copy(temp);
+                if (rateChange >= rateBefore && rand.nextDouble() > Math.exp(-(rateChange - rateBefore)/temperature)) {/* it's backward - if it's true the change is bad*/
+                    initialSolution = temp;
                 }
             }
             temperatureProtocol();
         }
-        return floorplan;
+        return initialSolution;
     }
 }
 

@@ -2,13 +2,16 @@ package com.example.chipfloorplanningoptimization.representation;
 
 import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
 import com.example.chipfloorplanningoptimization.abstract_structures.Point;
+import com.example.chipfloorplanningoptimization.gui.IOManager;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
-public class BTree implements Representation {
+public class BTree implements Representation<BTree> {
 
     private BNode<CModule> root;
-    private List<BNode<CModule>> nodes; // TODO: update this list
+    private List<BNode<CModule>> nodes;
     private List<List<String>> net;
     private final Random random = new Random();
     private final Runnable[] operations = new Runnable[] {
@@ -167,6 +170,57 @@ public class BTree implements Representation {
         unpack(0, this.root, result, contour);
         result.setNet(net);
         return result;
+    }
+
+    @Override
+    public BTree copy() {
+        return new BTree(this);
+    }
+
+    @Override
+    public void save(String path) throws IOException {
+        IOManager.saveList(path, nodes, (node) ->
+                  (node.hasLeft() ? node.getLeft().getValue().getName() : "null") + ";"
+                + (node.hasRight() ? node.getRight().getValue().getName() : "null") + ";"
+                + (node.getParent() != null ? node.getParent().getValue().getName() : "null") + ";"
+                + node.getValue().serialize());
+    }
+
+    public static BTree loadTree(String path) throws FileNotFoundException {
+        List<String[]> references = new LinkedList<>();
+        List<BNode<CModule>> nodes = IOManager.loadList(path, (t) -> {
+            String[] data = t.split(";");
+            references.add(new String [] {data[0], data[1], data[2]});
+            return new BNode<>(CModule.deserialize(data[3]), null);
+        });
+
+        BNode<CModule> root = null;
+        for (int i = 0; i < nodes.size(); i++) {
+            BNode<CModule> node = nodes.get(i);
+            String[] data = references.get(i);
+            BNode<CModule> left = null;
+            BNode<CModule> right = null;
+            BNode<CModule> parent = null;
+
+            if (!data[0].equals("null"))
+                left = nodes.stream()
+                        .filter(n -> n.getValue().getName().equals(data[0])).findFirst().get();
+            if (!data[1].equals("null"))
+                right = nodes.stream()
+                        .filter(n -> n.getValue().getName().equals(data[1])).findFirst().get();
+            if (!data[2].equals("null"))
+                parent = nodes.stream()
+                        .filter(n -> n.getValue().getName().equals(data[2])).findFirst().get();
+
+            node.setLeft(left);
+            node.setRight(right);
+            node.setParent(parent);
+
+            if (parent == null)
+                root = node;
+        }
+
+        return new BTree(root, nodes);
     }
 
     public static BTree packFloorplan(Floorplan floorplan) {
