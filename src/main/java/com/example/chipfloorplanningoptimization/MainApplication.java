@@ -56,7 +56,7 @@ public class MainApplication extends Application {
         Floorplan[] floorplans = new Floorplan[8];
         floorplans[0] = tree.unpack();
 
-        Optimizer op = new SimulatedAnnealing(200,100,100, 1);
+        Optimizer op = new SimulatedAnnealing(200,50,50, 20);
         BTree optimizedTree = op.optimize(tree);
         floorplans[1] = optimizedTree.unpack();
 

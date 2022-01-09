@@ -31,8 +31,6 @@ public class BTree implements Representation<BTree> {
                 if (replacer != null) {
                     if (toMove.getLeft() == replacer)
                         replacer.setRight(toMove.getRight());
-                    else
-                        replacer.setLeft(toMove.getLeft());
                     replacer.setParent(toMove.getParent());
                 }
 
@@ -42,6 +40,10 @@ public class BTree implements Representation<BTree> {
                         toMove.getParent().setLeft(replacer);
                     else
                         toMove.getParent().setRight(replacer);
+                }
+                else if (replacer != null) {
+                    replacer.setParent(null);
+                    this.root = replacer;
                 }
 
                 // step 2: insertion - if it's a left child node, add to the left.

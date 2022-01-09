@@ -38,7 +38,7 @@ public class SimulatedAnnealing implements Optimizer{
         while (temperature > finalTemperature) {
             for (int i = 0; i < iterations; i++) {
                 temp = initialSolution.copy();
-                initialSolution.operations()[1].run();
+                initialSolution.operations()[rand.nextInt(3)].run();
                 double rateChange = cost.evaluate(initialSolution);
                 double rateBefore = cost.evaluate(temp);
                 if (rateChange >= rateBefore && rand.nextDouble() > Math.exp(-(rateChange - rateBefore)/temperature)) {/* it's backward - if it's true the change is bad*/
