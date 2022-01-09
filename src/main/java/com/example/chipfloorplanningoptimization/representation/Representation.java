@@ -9,7 +9,7 @@ public interface Representation {
     Runnable[] operations();
 
     /**
-     * Pack a given floorplan into the representation
+     * Pack a given floorplan into the representation RANDOMLY! (packing is only used for initialization purposes)
      * @param floorplan floorplan (positions are considered)
      */
     void pack(Floorplan floorplan);

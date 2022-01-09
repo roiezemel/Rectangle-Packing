@@ -8,21 +8,91 @@ import java.util.*;
 public class BTree implements Representation {
 
     private BNode<CModule> root;
-    private List<BNode> nodes; // TODO: update this list
+    private List<BNode<CModule>> nodes; // TODO: update this list
     private List<List<String>> net;
+    private final Random random = new Random();
+    private final Runnable[] operations = new Runnable[] {
+            () -> {
+                BNode<CModule> node = nodes.get(random.nextInt(nodes.size()));
+                double height = node.getValue().getHeight();
+                node.getValue().setHeight(node.getValue().getWidth());
+                node.getValue().setWidth(height);
+            }, // op1 - rotate a module
+            () -> {
+                // step 1: deletion - If has left, replace with left (because lefts only have left child).
+                // otherwise, replace with right (no problem since it doesn't have left).
+                BNode<CModule> toMove = nodes.get(random.nextInt(nodes.size()));
+                BNode<CModule> replacer = toMove.hasLeft() ? toMove.getLeft() : (toMove.hasRight() ? toMove.getRight() : null);
+
+                // 1.1 replacer children
+                if (replacer != null) {
+                    if (toMove.getLeft() == replacer)
+                        replacer.setRight(toMove.getRight());
+                    else
+                        replacer.setLeft(toMove.getLeft());
+                    replacer.setParent(toMove.getParent());
+                }
+
+                // 1.2 replacer parent
+                if (toMove.getParent() != null) {
+                    if (toMove == toMove.getParent().getLeft())
+                        toMove.getParent().setLeft(replacer);
+                    else
+                        toMove.getParent().setRight(replacer);
+                }
+
+                // step 2: insertion - if it's a left child node, add to the left.
+                // if it's a right child: if it has a right child, add to the left.
+                // if it doesn't have a left child - add to the left.
+                // Otherwise, randomly choose between adding to the left or to the right.
+                BNode<CModule> putAfter = nodes.get(random.nextInt(nodes.size()));
+                while (putAfter == toMove || putAfter == toMove.getParent())
+                    putAfter = nodes.get(random.nextInt(nodes.size())); // make sure it's not put in the same place
+
+                if (putAfter.getParent() != null && putAfter == putAfter.getParent().getRight() && !putAfter.hasRight() && putAfter.hasLeft() && Math.random() < 0.5) { // add to right
+                    toMove.setLeft(null);
+                    toMove.setRight(putAfter.getRight());
+                    putAfter.setRight(toMove);
+                    if (toMove.hasRight())
+                        toMove.getRight().setParent(toMove);
+                }
+                else { // add to left
+                    toMove.setRight(null);
+                    toMove.setLeft(putAfter.getLeft());
+                    putAfter.setLeft(toMove);
+                    if (toMove.hasLeft())
+                        toMove.getLeft().setParent(toMove);
+                }
+                toMove.setParent(putAfter);
 
 
-    public BTree() {}
+            }, // op2 - move node to another place
+            () -> {
+                BNode<CModule> node = nodes.get(random.nextInt(nodes.size()));
+                BNode<CModule> randNode = nodes.get(random.nextInt(nodes.size()));
+                CModule module = node.getValue();
+                node.setValue(randNode.getValue());
+                randNode.setValue(module);
+            }  // op3 - swap two nodes
+    };
+
+
+    public BTree() {
+        nodes = new LinkedList<>();
+    }
 
     public BTree(BTree t) {
+        this();
         if (t.root == null)
             return;
-        this.root = new BNode<>(new CModule(t.root.getValue()));
+        this.root = new BNode<>(new CModule(t.root.getValue()), null);
+        nodes.add(this.root);
         copyTree(t.root, this.root);
     }
 
-    public BTree(BNode<CModule> root) {
+    public BTree(BNode<CModule> root, List<BNode<CModule>> nodes) {
         this.root = root;
+        this.nodes = nodes;
     }
 
     /**
@@ -32,38 +102,21 @@ public class BTree implements Representation {
      */
     private void copyTree(BNode<CModule> pos, BNode<CModule> copyTo) {
         if (pos.hasLeft()) {
-            copyTo.setLeft(new BNode<>(new CModule(pos.getLeft().getValue())));
+            copyTo.setLeft(new BNode<>(new CModule(pos.getLeft().getValue()), copyTo));
+            nodes.add(copyTo.getLeft());
             copyTree(pos.getLeft(), copyTo.getLeft());
         }
 
         if (pos.hasRight()) {
-            copyTo.setRight(new BNode<>(new CModule(pos.getRight().getValue())));
+            copyTo.setRight(new BNode<>(new CModule(pos.getRight().getValue()), copyTo));
+            nodes.add(copyTo.getRight());
             copyTree(pos.getRight(), copyTo.getRight());
         }
     }
 
     @Override
     public Runnable[] operations() {
-        // TODO: implement operations
-        return new Runnable[] {
-                () -> {
-                    BNode<CModule> node = nodes.get(new Random().nextInt(nodes.size()));
-                    double height = node.getValue().getHeight();
-                    node.getValue().setHeight(node.getValue().getWidth());
-                    node.getValue().setWidth(height);
-                }, // op1
-                () -> {
-                    BNode<CModule> randNode = nodes.get(new Random().nextInt(nodes.size()));
-
-                }, // op2
-                () -> {
-                    BNode<CModule> node = nodes.get(new Random().nextInt(nodes.size()));
-                    BNode<CModule> randNode = nodes.get(new Random().nextInt(nodes.size()));
-                    CModule module = node.getValue();
-                    node.setValue(randNode.getValue());
-                    randNode.setValue(module);
-                }  // op3
-        };
+        return operations;
     }
 
     @Override
@@ -74,56 +127,52 @@ public class BTree implements Representation {
         Floorplan copyFloorplan = new Floorplan(floorplan);
         Queue<CModule> modules = copyFloorplan.getModulesQueue();
 
-        BNode<CModule> beforeTree = new BNode<>(null);
+        BNode<CModule> beforeTree = new BNode<>(null, null);
         BNode<CModule> pos = beforeTree;
         double minimumWidth = (modules.size() / 2. * modules.peek().getWidth());
         double widthBound = Math.random() * (Math.sqrt(copyFloorplan.area()) - minimumWidth) + minimumWidth;
         while (!modules.isEmpty()) {
-            pos.setRight(new BNode<>(modules.poll()));
+            pos.setRight(new BNode<>(modules.poll(), pos));
             pos = pos.getRight();
+            nodes.add(pos);
             double width = pos.getValue().getWidth();
             widthBound = packLeft(pos, width, widthBound, modules);
         }
 
         this.net = floorplan.getNameNet();
         this.root = beforeTree.getRight();
+        this.root.setParent(null);
     }
 
     private double packLeft(BNode<CModule> pos, double width, double widthBound, Queue<CModule> modules) {
         if (modules.isEmpty() || width + modules.peek().getWidth() > widthBound)
             return width;
 
-        pos.setLeft(new BNode<>(modules.poll()));
+        pos.setLeft(new BNode<>(modules.poll(), pos));
+        nodes.add(pos.getLeft());
         return packLeft(pos.getLeft(), width + pos.getLeft().getValue().getWidth(), widthBound, modules);
     }
 
+    /**
+     * Unpack a B* Tree to a floorplan, based on the relative position of the left-bottom module (0, 0).
+     * @return a floorplan with meaningful positions
+     */
     @Override
     public Floorplan unpack() {
-        Floorplan floorplan = unpack(this);
-        floorplan.setNet(net);
-        return floorplan;
+        LinkedList<Point> contour = new LinkedList<>() {{
+            add(new Point(0, 0));
+            add(new Point(100000000, 0));
+        }};
+        Floorplan result = new Floorplan();
+        unpack(0, this.root, result, contour);
+        result.setNet(net);
+        return result;
     }
 
     public static BTree packFloorplan(Floorplan floorplan) {
         BTree tree = new BTree();
         tree.pack(floorplan);
         return tree;
-    }
-
-    /**
-     * Unpack a B* Tree to a floorplan, based on the relative position of the left-bottom module (0, 0).
-     * @param tree B* Tree representing a floorplan
-     * @return a floorplan with meaningful positions
-     */
-    public static Floorplan unpack(BTree tree) {
-        LinkedList<Point> contour = new LinkedList<>() {{
-            add(new Point(0, 0));
-            add(new Point(100000000, 0));
-        }};
-
-        Floorplan result = new Floorplan();
-        unpack(0, tree.root, result, contour);
-        return result;
     }
 
     /**
@@ -135,7 +184,7 @@ public class BTree implements Representation {
      * @param result result floorplan
      * @param contour a helper structure for an efficient calculation of the Y values
      */
-    private static void unpack(double x, BNode<CModule> pos, Floorplan result, LinkedList<Point> contour) {
+    private void unpack(double x, BNode<CModule> pos, Floorplan result, LinkedList<Point> contour) {
         if (pos == null)
             return;
 
@@ -149,7 +198,7 @@ public class BTree implements Representation {
         double maxY = -1;
         Iterator<Point> it = contour.iterator();
         Point curr = it.next();
-        while (it.hasNext() && curr.x() <= x + width) {
+        while (it.hasNext() && curr.x() < x + width) { // replaced <= with <
             Point next = it.next();
             if (!startSet && next.x() > x) { // curr is the start
                 start = index;
@@ -162,10 +211,11 @@ public class BTree implements Representation {
         }
 
         // Update current module's position
-        pos.getValue().setPosition(new Point(x, maxY));
+        CModule module = new CModule(pos.getValue());
+        module.setPosition(new Point(x, maxY));
 
         // Add module
-        result.addModule(pos.getValue());
+        result.addModule(module);
 
         // Update contour structure
         Point topLeft = new Point(x, maxY + height);
