@@ -11,6 +11,11 @@ public interface Representation<T> {
     Runnable[] operations();
 
     /**
+     * Make a random operation
+     */
+    void perturb();
+
+    /**
      * Pack a given floorplan into the representation RANDOMLY! (packing is only used for initialization purposes)
      * @param floorplan floorplan (positions are considered)
      */

@@ -2,6 +2,7 @@ package com.example.chipfloorplanningoptimization;
 
 import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
 import com.example.chipfloorplanningoptimization.gui.IOManager;
+import com.example.chipfloorplanningoptimization.optimization.Cost;
 import com.example.chipfloorplanningoptimization.optimization.Optimizer;
 import com.example.chipfloorplanningoptimization.optimization.SimulatedAnnealing;
 import com.example.chipfloorplanningoptimization.representation.BNode;
@@ -53,10 +54,13 @@ public class MainApplication extends Application {
         List<BNode<CModule>> nodes = new LinkedList<>() {{ add(n1); add(n2); add(n3); add(n4); add(n5); add(n6); }};
        BTree tree = new BTree(n1, nodes);
 
+       tree.perturb();
+
         Floorplan[] floorplans = new Floorplan[8];
         floorplans[0] = tree.unpack();
 
-        Optimizer op = new SimulatedAnnealing(200,50,50, 20);
+        Cost cost =  new Cost(1, 50, tree);
+        Optimizer op = new SimulatedAnnealing(1000, 0.999, 0.000001, 0.95, cost);
         BTree optimizedTree = op.optimize(tree);
         floorplans[1] = optimizedTree.unpack();
 

@@ -129,6 +129,11 @@ public class BTree implements Representation<BTree> {
     }
 
     @Override
+    public void perturb() {
+        operations[random.nextInt(operations.length)].run();
+    }
+
+    @Override
     public void pack(Floorplan floorplan) {
         if (floorplan.getModules().isEmpty())
             return;

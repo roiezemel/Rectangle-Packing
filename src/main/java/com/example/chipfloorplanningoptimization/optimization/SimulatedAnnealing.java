@@ -1,5 +1,4 @@
 package com.example.chipfloorplanningoptimization.optimization;
-import com.example.chipfloorplanningoptimization.representation.BTree;
 import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.util.Random;
@@ -7,22 +6,54 @@ import java.lang.Math;
 
 public class SimulatedAnnealing implements Optimizer{
 
-    private double temperature;
+    private final int iterations;    // number of iterations
     private final double finalTemperature;
-    private final int iterations;
-    private final double tempChange;
+    private final double r; // the ratio by which the temperature is reduced each iteration
+    private final double P; // initial probability of accepting an uphill solution
+    private final Cost cost;
+    private static final Random random = new Random();
 
-    public SimulatedAnnealing(double temperature,double finalTemperature, double tempChange, int iterations) {
-        this.temperature = temperature;
-        this.finalTemperature = finalTemperature;
-        this.tempChange = tempChange;
+    /**
+     * Initiate the Simulated Annealing
+     * @param iterations number of iterations to perform in each temperature level
+     * @param uphillProbability the initial probability of accepting an uphill solution.
+     *                          Can be set very close to 1 (but not 1).
+     * @param finalTemperature the minimum temperature that the algorithm can get to
+     * @param reduceRatio the ratio by which the temperature is reduced each iteration
+     * @param cost a Cost object
+     */
+    public SimulatedAnnealing(int iterations, double uphillProbability, double finalTemperature, double reduceRatio, Cost cost) {
+        this.r = reduceRatio;
+        this.P = uphillProbability;
         this.iterations = iterations;
+        this.finalTemperature = finalTemperature;
+        this.cost = cost;
+    }
+
+    public SimulatedAnnealing(int iterations, double uphillProbability, double finalTemperature, Cost cost) {
+        this(iterations, uphillProbability, finalTemperature, 0.85, cost);
     }
 /*
 * do the change in the temperature
 */
-    private void temperatureProtocol() {
-        this.temperature = temperature - tempChange;
+    private double temperatureProtocol(double T) {
+        return r * T; // reduce temperature
+    }
+
+    private <T extends Representation<T>> double calculateInitialTemperature(T initialSolution, int perturbations) {
+        T solution = initialSolution.copy();
+        double avgCost = 0;
+        double prevCost = cost.evaluate(solution);
+        for (int i = 0; i < perturbations; i++) {
+            solution.perturb();
+            double newCost = cost.evaluate(solution);
+            if (newCost > prevCost)
+                avgCost += newCost - prevCost;
+            prevCost = newCost;
+        }
+        avgCost /= perturbations;
+
+        return -avgCost / Math.log(P);
     }
 
     /**
@@ -32,22 +63,36 @@ public class SimulatedAnnealing implements Optimizer{
      */
     @Override
     public <T extends Representation<T>> T optimize(T initialSolution) {
+        T solution = initialSolution.copy();
+        T bestSolution = initialSolution.copy();
+        double lowestCost = cost.evaluate(bestSolution);
+        double T = calculateInitialTemperature(initialSolution, 20);
         T temp;
-        Cost cost = new Cost(1, 20, initialSolution.copy());
-        Random rand = new Random();
-        while (temperature > finalTemperature) {
+        int reject = 0;
+        System.out.println("Starting with temperature: " + T);
+        System.out.println("Cost: " + lowestCost);
+        while ((double) reject / iterations <= 0.95 && T >= finalTemperature) {
+            reject = 0;
             for (int i = 0; i < iterations; i++) {
-                temp = initialSolution.copy();
-                initialSolution.operations()[rand.nextInt(3)].run();
-                double rateChange = cost.evaluate(initialSolution);
+                temp = solution.copy();
+                solution.perturb();
+                double rateChange = cost.evaluate(solution);
                 double rateBefore = cost.evaluate(temp);
-                if (rateChange >= rateBefore && rand.nextDouble() > Math.exp(-(rateChange - rateBefore)/temperature)) {/* it's backward - if it's true the change is bad*/
-                    initialSolution = temp;
+                if (rateChange >= rateBefore && random.nextDouble() > Math.exp(-(rateChange - rateBefore)/T)) {/* it's backward - if it's true the change is bad*/
+                    solution = temp;
+                    reject++;
+                }
+                else if (rateChange < lowestCost) {
+                    lowestCost = rateChange;
+                    bestSolution = solution.copy();
                 }
             }
-            temperatureProtocol();
+            T = temperatureProtocol(T);
         }
-        return initialSolution;
+
+        System.out.println("Finished with temperature: " + T);
+        System.out.println("Cost: " + lowestCost);
+        return bestSolution;
     }
 }
 

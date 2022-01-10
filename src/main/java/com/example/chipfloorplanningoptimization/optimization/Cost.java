@@ -8,7 +8,7 @@ import java.util.Random;
 public class Cost {
 
 
-    private double Anorm;
+    public double Anorm;
     private double Wnorm;
     private final double alpha; // 0 < alpha < 1
 
@@ -18,7 +18,7 @@ public class Cost {
      *                      Anorm and Wnorm (maybe proportional to the problem size)
      * @param initialSolution an initial solution to apply perturbations on (the solution will be changed)
      */
-    public Cost(double alpha, int perturbations, Representation initialSolution) {
+    public <T extends Representation<T>> Cost(double alpha, int perturbations, T initialSolution) {
         if (alpha > 1 || alpha < 0)
             throw new IllegalArgumentException("0 < alpha < 1!");
         this.alpha = alpha;
@@ -27,10 +27,10 @@ public class Cost {
         Random random = new Random();
         Anorm = 0;
         Wnorm = 0;
+        T solution = initialSolution.copy();
         for (int i = 0; i < perturbations; i++) {
-            Runnable[] operations = initialSolution.operations();
-            operations[random.nextInt(operations.length)].run();
-            Floorplan floorplan = initialSolution.unpack();
+            solution.perturb();
+            Floorplan floorplan = solution.unpack();
             Anorm += floorplan.area();
             Wnorm += floorplan.totalWireLength();
         }
@@ -45,7 +45,7 @@ public class Cost {
      * @param r - a solution
      * @return cost
      */
-    public double evaluate(Representation r) {
+    public <T extends Representation<T>> double evaluate(T r) {
         Floorplan floorplan = r.unpack();
         return alpha * (floorplan.area() / Anorm) + (1 - alpha) * (floorplan.totalWireLength() / Wnorm);
     }
