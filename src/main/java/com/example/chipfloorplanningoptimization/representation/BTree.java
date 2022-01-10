@@ -29,8 +29,11 @@ public class BTree implements Representation<BTree> {
 
                 // 1.1 replacer children
                 if (replacer != null) {
-                    if (toMove.getLeft() == replacer)
+                    if (toMove.getLeft() == replacer) {
                         replacer.setRight(toMove.getRight());
+                        if (replacer.hasRight()) // if it's not null
+                            replacer.getRight().setParent(replacer);
+                    }
                     replacer.setParent(toMove.getParent());
                 }
 
@@ -69,6 +72,7 @@ public class BTree implements Representation<BTree> {
                         toMove.getLeft().setParent(toMove);
                 }
                 toMove.setParent(putAfter);
+
 
 
             }, // op2 - move node to another place
