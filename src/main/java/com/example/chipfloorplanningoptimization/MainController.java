@@ -17,6 +17,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,7 @@ public class MainController implements Painter {
     public void draw(int index) { // Draw a page according to the current page index
 
         canvas.drawFloorplan(floorplans[index], wiresVisible);
-        canvas.setTitle("Cost: " + floorplans[index].area());
+        canvas.setTitle("Area: " + new DecimalFormat("#,###").format(floorplans[index].area()));
 
     }
 

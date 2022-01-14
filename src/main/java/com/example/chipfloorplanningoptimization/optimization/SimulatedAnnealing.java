@@ -56,37 +56,56 @@ public class SimulatedAnnealing implements Optimizer{
         return -avgCost / Math.log(P);
     }
 
+    private double uphillProbability(double costChange, double temperature) {
+        return Math.exp(-(costChange)/temperature);
+    }
+
     /**
      * the loop that change the floorplan untill it's find a selution
      * @param initialSolution represntation
      * @return the represntation solution
      */
     @Override
-    public <T extends Representation<T>> T optimize(T initialSolution) {
+    public <T extends Representation<T>> T optimize(T initialSolution, OptimizationLogger... loggers) {
         T solution = initialSolution.copy();
         T bestSolution = initialSolution.copy();
         double lowestCost = cost.evaluate(bestSolution);
         double T = calculateInitialTemperature(initialSolution, 20);
-        T temp;
         int reject = 0;
+        T prevSolution = solution.copy();
+        double prevCost = lowestCost;
+
         System.out.println("Starting with temperature: " + T);
         System.out.println("Cost: " + lowestCost);
+
         while ((double) reject / iterations <= 0.95 && T >= finalTemperature) {
             reject = 0;
+            double avgCost = 0;
             for (int i = 0; i < iterations; i++) {
-                temp = solution.copy();
-                solution.perturb();
-                double rateChange = cost.evaluate(solution);
-                double rateBefore = cost.evaluate(temp);
-                if (rateChange >= rateBefore && random.nextDouble() > Math.exp(-(rateChange - rateBefore)/T)) {/* it's backward - if it's true the change is bad*/
-                    solution = temp;
+                solution.perturb(); // random operation
+
+                double newCost = cost.evaluate(solution);
+                double costChange = newCost - prevCost;
+
+                if (newCost >= prevCost && random.nextDouble() > uphillProbability(costChange, T)) {/* it's backward - if it's true the change is bad*/
+                    solution = prevSolution;
+                    newCost = prevCost;
                     reject++;
                 }
-                else if (rateChange < lowestCost) {
-                    lowestCost = rateChange;
+                else if (newCost < lowestCost) {
+                    lowestCost = newCost;
                     bestSolution = solution.copy();
                 }
+
+                prevSolution = solution.copy();
+                prevCost = newCost;
+
+                avgCost += newCost;
             }
+            avgCost /= iterations;
+
+            loggers[0].log(T, avgCost);
+            loggers[1].log(T, reject);
             T = temperatureProtocol(T);
         }
 
@@ -94,5 +113,6 @@ public class SimulatedAnnealing implements Optimizer{
         System.out.println("Cost: " + lowestCost);
         return bestSolution;
     }
+
 }
 

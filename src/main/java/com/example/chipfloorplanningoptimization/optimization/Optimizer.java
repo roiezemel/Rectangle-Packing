@@ -4,6 +4,6 @@ import com.example.chipfloorplanningoptimization.representation.Representation;
 
 public interface Optimizer {
 
-    <T extends Representation<T>> T optimize(T initialSolution);
+    <T extends Representation<T>> T optimize(T initialSolution, OptimizationLogger... loggers);
 
 }
