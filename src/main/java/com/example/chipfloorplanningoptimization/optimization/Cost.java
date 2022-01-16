@@ -8,7 +8,7 @@ import java.util.Random;
 public class Cost {
 
 
-    public double Anorm;
+    private double Anorm;
     private double Wnorm;
     private final double alpha; // 0 < alpha < 1
 
@@ -48,6 +48,10 @@ public class Cost {
     public <T extends Representation<T>> double evaluate(T r) {
         Floorplan floorplan = r.unpack();
         return alpha * (floorplan.area() / Anorm) + (1 - alpha) * (floorplan.totalWireLength() / Wnorm);
+    }
+
+    public double getAlpha() {
+        return alpha;
     }
 
 }

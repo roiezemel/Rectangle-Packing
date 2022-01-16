@@ -1,0 +1,6 @@
+Cost weight (alpha): 1.0
+Iterations (per temperature): 1000000
+Initial uphill probability: 0.999
+Minimum temperature: 1.0E-5
+Reduce ratio: 0.92
+Quit at reject/iterations > 1.0

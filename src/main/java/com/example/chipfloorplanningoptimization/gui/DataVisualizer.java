@@ -6,6 +6,7 @@ import org.knowm.xchart.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class DataVisualizer {
 
@@ -30,8 +31,15 @@ public class DataVisualizer {
     if (!matrix)
       for (XYChart chart : charts)
         plot(chart);
-    else
-      new SwingWrapper<>(charts).displayChartMatrix();
+    else {
+        List<XYChart> remaining = charts;
+        if (charts.size() > 4) {
+            List<XYChart> sub = charts.subList(0, 4);
+            new SwingWrapper<>(sub).displayChartMatrix();
+            remaining = charts.subList(4, charts.size());
+        }
+        new SwingWrapper<>(remaining).displayChartMatrix();
+    }
  }
 
  public void saveCharts() throws IOException {
