@@ -3,10 +3,7 @@ package com.example.chipfloorplanningoptimization;
 import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
 import com.example.chipfloorplanningoptimization.gui.DataVisualizer;
 import com.example.chipfloorplanningoptimization.gui.IOManager;
-import com.example.chipfloorplanningoptimization.optimization.Cost;
-import com.example.chipfloorplanningoptimization.optimization.OptimizationLogger;
-import com.example.chipfloorplanningoptimization.optimization.Optimizer;
-import com.example.chipfloorplanningoptimization.optimization.SimulatedAnnealing;
+import com.example.chipfloorplanningoptimization.optimization.*;
 import com.example.chipfloorplanningoptimization.representation.BNode;
 import com.example.chipfloorplanningoptimization.representation.BTree;
 import com.example.chipfloorplanningoptimization.representation.Floorplan;
@@ -77,81 +74,16 @@ public class MainApplication extends Application {
 
         // optimize
         Cost cost =  new Cost(1, 50, original);
-        Optimizer op = new SimulatedAnnealing(1000000, 0.92,
+        Optimizer op = new SimulatedAnnealing(10000, 0.92,
                 0.01, 0.99, 1.0, cost);
 
-        String exFolder = exDirectoryPath();
-        OptimizationLogger avgCostLogger = new OptimizationLogger(exFolder,
-                "Temperature_Average Cost",
-                (values) -> values[0] + "," + values[1]);
-        OptimizationLogger rejectLogger = new OptimizationLogger(exFolder,
-                "Temperature_Rejections",
-                (values) -> values[0] + "," + values[1]);
-        OptimizationLogger lowestCostLogger = new OptimizationLogger(exFolder,
-                "Temperature_Lowest Cost",
-                (values) -> values[0] + "," + values[1]);
-        OptimizationLogger temperatureLogger = new OptimizationLogger(exFolder,
-                "Time_Temperature",
-                (values) -> values[0] + "," + values[1]);
-        OptimizationLogger avgCostTimeLogger = new OptimizationLogger(exFolder,
-                "Time_Average Cost",
-                (values) -> values[0] + "," + values[1]);
+        Experiment ex = new Experiment();
 
-
-        BTree optimized = op.optimize(original, avgCostLogger, rejectLogger, lowestCostLogger, temperatureLogger, avgCostTimeLogger);
-        Floorplan optimizedFloorplan = optimized.unpack();
+        ex.setOptimizer(op);
+        Floorplan optimizedFloorplan = ex.run(original, "custom").unpack();
 //        optimizedFloorplan.setNet(fileFloorplan);
 
-        avgCostLogger.close();
-        rejectLogger.close();
-        lowestCostLogger.close();
-        temperatureLogger.close();
-        avgCostTimeLogger.close();
-
-        op.saveParams(exFolder);
-
-        try {
-            optimized.save(exFolder + "/custom-result.txt");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        createCharts(exFolder);
-
         return new Floorplan[] {originalFloorplan, optimizedFloorplan};
-    }
-
-    private void createCharts(String exFolder) {
-        DataVisualizer dv = new DataVisualizer(exFolder);
-        dv.addFromCSV("Temperature_Average Cost");
-        dv.addFromCSV("Temperature_Rejections");
-        dv.addFromCSV("Temperature_Lowest Cost");
-        dv.addFromCSV("Time_Temperature");
-        dv.addFromCSV("Time_Average Cost");
-
-        try {
-            dv.saveCharts();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        dv.displayCharts(true);
-    }
-
-    private int toExNumber(String fileName) {
-        return Integer.parseInt(fileName.replace("ex #", ""));
-    }
-
-    private String exDirectoryPath() throws IOException {
-        File file = new File("src/main/data");
-        String[] directories = file.list((current, name) -> new File(current, name).isDirectory());
-        int exNumber = 0;
-        if (directories != null && directories.length > 0) {
-            String lastEx = Arrays.stream(directories).max(Comparator.comparingInt((this::toExNumber))).get();
-            exNumber = toExNumber(lastEx) + 1;
-        }
-        String path = "src/main/data/ex #" + exNumber;
-        Files.createDirectories(Paths.get(path));
-        return path;
     }
 
     private Floorplan getFloorplanFromFile(String blocksFilePath, String netFilePath) {

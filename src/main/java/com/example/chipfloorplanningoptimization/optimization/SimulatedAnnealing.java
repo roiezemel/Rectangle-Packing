@@ -16,6 +16,7 @@ public class SimulatedAnnealing implements Optimizer{
     private final Cost cost;
     private final double rejectQuitPercent;
     private static final Random random = new Random();
+    private DataCollector dc;
 
     /**
      * Initiate the Simulated Annealing
@@ -73,7 +74,7 @@ public class SimulatedAnnealing implements Optimizer{
      * @return the represntation solution
      */
     @Override
-    public <T extends Representation<T>> T optimize(T initialSolution, OptimizationLogger... loggers) {
+    public <T extends Representation<T>> T optimize(T initialSolution) {
         T solution = initialSolution.copy();
         T bestSolution = initialSolution.copy();
         double lowestCost = cost.evaluate(bestSolution);
@@ -86,10 +87,12 @@ public class SimulatedAnnealing implements Optimizer{
         System.out.println("Cost: " + lowestCost);
         int count = 0;
 
+        if (dc != null)
+            dc.getLogger("Temperature", "Lowest Cost").log(T, lowestCost); // first value of the lowest cost
+
         while ((double) reject / iterations <= rejectQuitPercent && T >= finalTemperature) {
             reject = 0;
             double avgCost = 0;
-            loggers[2].log(T, lowestCost);
             for (int i = 0; i < iterations; i++) {
                 solution.perturb(); // random operation
 
@@ -113,10 +116,14 @@ public class SimulatedAnnealing implements Optimizer{
             }
             avgCost /= iterations;
 
-            loggers[0].log(T, avgCost);
-            loggers[1].log(T, reject);
-            loggers[3].log(count, T);
-            loggers[4].log(count, avgCost);
+            if (dc != null) { // log values
+                dc.getLogger("Temperature", "Average Cost").log(T, avgCost);
+                dc.getLogger("Temperature", "Rejections").log(T, reject);
+                dc.getLogger("Temperature", "Lowest Cost").log(T, lowestCost);
+                dc.getLogger("Time", "Temperature").log(count, T);
+                dc.getLogger("Time", "Average Cost").log(count, avgCost);
+            }
+
             count++;
             T = temperatureProtocol(T);
         }
@@ -136,6 +143,26 @@ public class SimulatedAnnealing implements Optimizer{
         writer.write("Reduce ratio: " + r + "\n");
         writer.write("Quit at reject/iterations > " + rejectQuitPercent);
         writer.close();
+    }
+
+    @Override
+    public void setDataCollector(String outputDirectory) {
+        this.dc = new DataCollector(outputDirectory);
+        dc.addLogger("Temperature", "Average Cost");
+        dc.addLogger("Temperature", "Rejections");
+        dc.addLogger("Temperature", "Lowest Cost");
+        dc.addLogger("Time", "Temperature");
+        dc.addLogger("Time", "Average Cost");
+    }
+
+    @Override
+    public DataCollector getDataCollector() {
+        return dc;
+    }
+
+    @Override
+    public void closeDataCollector() {
+        dc.close();
     }
 
 }

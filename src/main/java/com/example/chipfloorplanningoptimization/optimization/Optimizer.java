@@ -6,8 +6,14 @@ import java.io.IOException;
 
 public interface Optimizer {
 
-    <T extends Representation<T>> T optimize(T initialSolution, OptimizationLogger... loggers);
+    <T extends Representation<T>> T optimize(T initialSolution);
 
     void saveParams(String path) throws IOException;
+
+    void setDataCollector(String outputDirectory);
+
+    DataCollector getDataCollector();
+
+    void closeDataCollector();
 
 }
