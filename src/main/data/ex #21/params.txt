@@ -1,0 +1,7 @@
+Cost weight (alpha): 1.0
+Iterations (per temperature): 100000
+Initial uphill probability: 0.996
+Minimum temperature: 0.0
+Reduce ratio: 0.85
+Quit at reject/iterations > 1.0
+Cooling Schedule: Wave Schedule

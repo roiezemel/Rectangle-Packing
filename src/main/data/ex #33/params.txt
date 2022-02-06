@@ -1,0 +1,2 @@
+Optimizer: Dumb Search
+Cost weight (alpha): 0.7

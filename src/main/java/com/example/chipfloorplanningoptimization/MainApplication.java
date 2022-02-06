@@ -1,13 +1,14 @@
 package com.example.chipfloorplanningoptimization;
 
 import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
-import com.example.chipfloorplanningoptimization.gui.DataVisualizer;
 import com.example.chipfloorplanningoptimization.gui.IOManager;
 import com.example.chipfloorplanningoptimization.optimization.*;
+import com.example.chipfloorplanningoptimization.optimization.cooling_schedule.ClimberSchedule;
+import com.example.chipfloorplanningoptimization.optimization.cooling_schedule.FastSA;
+import com.example.chipfloorplanningoptimization.optimization.cooling_schedule.WaveSchedule;
 import com.example.chipfloorplanningoptimization.representation.BNode;
 import com.example.chipfloorplanningoptimization.representation.BTree;
 import com.example.chipfloorplanningoptimization.representation.Floorplan;
-import com.example.chipfloorplanningoptimization.representation.Representation;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -15,16 +16,9 @@ import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import org.knowm.xchart.QuickChart;
-import org.knowm.xchart.SwingWrapper;
-import org.knowm.xchart.XYChart;
-
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class MainApplication extends Application {
@@ -66,17 +60,22 @@ public class MainApplication extends Application {
     }
 
     public Floorplan[] createFloorplans() throws IOException {
-//        Floorplan fileFloorplan = getFloorplanFromFile("n30.txt", "nets30.txt");
-        BTree original = createInitialSolution(); //BTree.packFloorplan(fileFloorplan);
+//        Floorplan fileFloorplan = getFloorplanFromFile("n50.txt", "nets50.txt");
+        BTree original = createInitialSolution();
+//        BTree original = BTree.loadTree("src/main/data/ex #34/n50-result.txt");
 
         Floorplan originalFloorplan = original.unpack();
 //        originalFloorplan.setNet(Objects.requireNonNull(fileFloorplan));
 
         // optimize
-        Cost cost =  new Cost(1, 50, original);
-        Optimizer op = new SimulatedAnnealing(10000, 0.92,
-                0.01, 0.99, 1.0, cost);
+        Cost cost =  new Cost(1, 100, original);
 
+//        SimulatedAnnealing op = new SimulatedAnnealing(100000, 0.996,
+//                0, 1.0, 200, cost);
+//        op.setDefaultCoolingSchedule(0.85);
+//        op.setCoolingSchedule(new WaveSchedule(0.01, 0.3, 0.9));
+
+        Optimizer op = new DumbSearch(cost);
         Experiment ex = new Experiment();
 
         ex.setOptimizer(op);
