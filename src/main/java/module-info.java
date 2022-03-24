@@ -14,4 +14,6 @@ module com.example.chipfloorplanningoptimization {
     opens com.example.chipfloorplanningoptimization.optimization.simulated_annealing.cooling_schedule to javafx.fxml;
     exports com.example.chipfloorplanningoptimization.optimization.simulated_annealing;
     opens com.example.chipfloorplanningoptimization.optimization.simulated_annealing to javafx.fxml;
+    exports com.example.chipfloorplanningoptimization.representation;
+    opens com.example.chipfloorplanningoptimization.representation to javafx.fxml;
 }

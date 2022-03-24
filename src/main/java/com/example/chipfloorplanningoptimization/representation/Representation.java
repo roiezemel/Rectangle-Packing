@@ -1,6 +1,9 @@
 package com.example.chipfloorplanningoptimization.representation;
 
+import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
+
 import java.io.IOException;
+import java.util.HashMap;
 
 public interface Representation<T> {
 
@@ -39,5 +42,8 @@ public interface Representation<T> {
 
     String serialize();
 
+    T deserialize(String text, HashMap<String, CModule> modulesByNames);
+
+    HashMap<String, CModule> createNameModuleMap();
 
 }

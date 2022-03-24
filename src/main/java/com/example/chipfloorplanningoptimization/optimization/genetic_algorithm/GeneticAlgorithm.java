@@ -1,56 +1,59 @@
 package com.example.chipfloorplanningoptimization.optimization.genetic_algorithm;
 
 import com.example.chipfloorplanningoptimization.optimization.Cost;
+import com.example.chipfloorplanningoptimization.optimization.NormCost;
 import com.example.chipfloorplanningoptimization.optimization.DataCollector;
 import com.example.chipfloorplanningoptimization.optimization.Optimizer;
-import com.example.chipfloorplanningoptimization.representation.BTree;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.fitness_functions.FitnessFunction;
 import com.example.chipfloorplanningoptimization.representation.Representation;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.function.DoubleFunction;
-import java.util.function.DoubleSupplier;
-import java.util.function.ToDoubleFunction;
+import java.util.List;
 
-public class GeneticAlgorithm {
+public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<T> {
 
-    private int populationSize;
-    private double mutationRate;
-    private Crossover cross;
-    private Selection selector;
-    private FitnessFunction fitnessFunction;
-    private Cost cost;
+    private final int populationSize;
+    private final double mutationRate;
+    private final int generations;
+    private final Crossover<T> cross;
+    private final Selection<T> selector;
+    private final FitnessFunction<T> fitnessFunction;
+    private final Cost<T> cost;
+    private DataCollector dc;
 
-    public GeneticAlgorithm(int populationSize, double mutationRate, Crossover cross, Selection selector, Cost cost, FitnessFunction fitnessFunction) {
+    public GeneticAlgorithm(int populationSize, double mutationRate, int generations, Crossover<T> cross, Selection<T> selector, Cost<T> cost, FitnessFunction<T> fitnessFunction) {
         this.populationSize = populationSize;
         this.mutationRate = mutationRate;
+        this.generations = generations;
         this.cross = cross;
         this.selector = selector;
         this.cost = cost;
         this.fitnessFunction = fitnessFunction;
     }
 
-    public GeneticAlgorithm(int populationSize, double mutationRate, Cost cost, FitnessFunction fitnessFunction) {
-        this(populationSize, mutationRate, new PartiallyMappedCrossover(), new RouletteSelection(), cost, fitnessFunction);
+    public GeneticAlgorithm(int populationSize, double mutationRate, int generations, Cost<T> cost, FitnessFunction<T> fitnessFunction) {
+        this(populationSize, mutationRate, generations, new PartiallyMappedCrossover<>(), new RouletteSelection<>(), cost, fitnessFunction);
     }
 
-    public BTree[] optimize(BTree initialSolution, int generations) {
+    @Override
+    public T optimize(T initialSolution) {
         // Initial population
-        ArrayList<BTree> population = createInitialPopulation(initialSolution, populationSize);
-        HashMap<BTree, Double> fitness = fitnessFunction.apply(population, cost);
+        ArrayList<T> population = createInitialPopulation(initialSolution, populationSize);
+        HashMap<T, Double> fitness = fitnessFunction.apply(population, cost);
         selector.updatePopulation(population, fitness);
 
-        BTree bestSolution = getCurrentBestSolution(population, fitness);
+        T bestSolution = getCurrentBestSolution(population, fitness);
         double lowestCost = cost.evaluate(bestSolution);
         for (int i = 0; i < generations; i++) {
 
             // Selection + Crossover
-            ArrayList<BTree> newPopulation = new ArrayList<>(populationSize + 1);
+            ArrayList<T> newPopulation = new ArrayList<>(populationSize + 1);
             for (int j = 0; j < populationSize / 2; j++) {
-                BTree[] children = cross.crossover(selector.select());
-                for (BTree child : children) {
+                List<T> children = cross.crossover(selector.select());
+                for (T child : children) {
                     // Mutation:
                     if (Math.random() < mutationRate)
                         child.perturb();
@@ -65,41 +68,85 @@ public class GeneticAlgorithm {
             fitness = fitnessFunction.apply(population, cost);
 
             // Compare to bestSolution
-            BTree currentBest = getCurrentBestSolution(population, fitness);
+            T currentBest = getCurrentBestSolution(population, fitness);
+            dc.getLogger("Generation", "Current Lowest Cost").log(i, cost.evaluate(currentBest));
             if (cost.evaluate(currentBest) < lowestCost) {
                 bestSolution = currentBest;
                 lowestCost = cost.evaluate(currentBest);
             }
+            dc.getLogger("Generation", "Lowest Cost So Far").log(i, lowestCost);
             if (lowestCost == cost.getMinimumPossible())
                 break;
 
             // Update selector
             selector.updatePopulation(population, fitness);
 
-            if (i % 100 == 0)
-                System.out.println(population.stream().mapToDouble(fitness::get).sum() / population.size());
+            if (i % 10 == 0) {
+                double averageCost = population.stream().mapToDouble(cost::evaluate).sum() / population.size();
+                dc.getLogger("Generation", "Average Cost").log(i, averageCost);
+                if (i % 100 == 0)
+                    System.out.println(averageCost);
+            }
         }
 
-        return new BTree[] {bestSolution};
+        return bestSolution;
     }
 
-    private BTree getCurrentBestSolution(ArrayList<BTree> population, HashMap<BTree, Double> fitness) {
+    private T getCurrentBestSolution(ArrayList<T> population, HashMap<T, Double> fitness) {
         return population.stream()
                 .reduce((a, b) -> (fitness.get(a) > fitness.get(b) ? a : b))
                 .orElse(null);
     }
 
-    private ArrayList<BTree> createInitialPopulation(BTree initialSolution, int populationSize) {
-        ArrayList<BTree> population = new ArrayList<>(populationSize + 1);
+    private ArrayList<T> createInitialPopulation(T initialSolution, int populationSize) {
+        ArrayList<T> population = new ArrayList<>(populationSize + 1);
 
-        BTree tree = new BTree(initialSolution);
+        T tree = initialSolution.copy();
         for (int i = 0; i < populationSize; i++) {
-            population.add(tree);
-            tree = BTree.packFloorplan(initialSolution.unpack());
+            population.add(tree.copy());
+            tree.pack(initialSolution.unpack());
             int perturbs = (int)(Math.random() * 10);
             for (int j = 0; j < perturbs; j++) tree.perturb();
         }
 
         return population;
+    }
+
+    @Override
+    public void saveParams(String folderPath) throws IOException {
+        FileWriter writer = new FileWriter(folderPath + "/params.txt");
+        writer.write("Optimizer: Genetic Algorithm\n");
+        writer.write("Cost Function: " + cost.getName() + "\n");
+        writer.write(cost.paramsDescription() + "\n");
+        writer.write("Population size: " + populationSize + "\n");
+        writer.write("Mutation rate: " + mutationRate + "\n");
+        writer.write("Max generations: " + generations + "\n");
+        writer.write("Crossover: " + cross.getName() + "\n");
+        writer.write("Selection: " + selector.getName() + "\n");
+        writer.write("Fitness Function: " + fitnessFunction.getName());
+        writer.close();
+    }
+
+    @Override
+    public void setDataCollector(String outputDirectory) {
+        this.dc = new DataCollector(outputDirectory);
+        dc.addLogger("Generation", "Current Lowest Cost");
+        dc.addLogger("Generation", "Lowest Cost So Far");
+        dc.addLogger("Generation", "Average Cost");
+    }
+
+    @Override
+    public DataCollector getDataCollector() {
+        return dc;
+    }
+
+    @Override
+    public void closeDataCollector() {
+        dc.close();
+    }
+
+    @Override
+    public String getName() {
+        return "Genetic Algorithm";
     }
 }

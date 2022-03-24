@@ -1,46 +1,48 @@
 package com.example.chipfloorplanningoptimization.optimization.genetic_algorithm;
 
-import com.example.chipfloorplanningoptimization.optimization.Cost;
-import com.example.chipfloorplanningoptimization.representation.BTree;
+import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-public class RouletteSelection implements Selection {
+public class RouletteSelection<T extends Representation<T>> implements Selection<T> {
 
     private final Random random = new Random();
-    private NavigableMap<Double, BTree> rouletteWheel;
+    private NavigableMap<Double, T> rouletteWheel;
     private double total = 0;
 
     @Override
-    public BTree[] select() {
-        BTree t1 = next();
-        BTree t2;
+    public List<T> select() {
+        T t1 = next();
+        T t2;
         do {
             t2 = next();
         } while (t2 == t1);
-        return new BTree[] {t1, t2};
+        return Arrays.asList(t1, t2);
     }
 
-    private BTree next() {
+    private T next() {
         double value = random.nextDouble() * total;
         return rouletteWheel.higherEntry(value).getValue();
     }
 
     @Override
-    public void updatePopulation(ArrayList<BTree> population, HashMap<BTree, Double> fitness) {
+    public void updatePopulation(ArrayList<T> population, HashMap<T, Double> fitness) {
         total = 0;
-        List<BTree> sorted = new ArrayList<>(population);
+        List<T> sorted = new ArrayList<>(population);
         sorted.sort((a, b) -> (int) (fitness.get(b) - fitness.get(a)));
 
         rouletteWheel = new TreeMap<>();
 
-        for (BTree tree : sorted) {
+        for (T tree : sorted) {
             if (fitness.get(tree) > 0) {
                 total += fitness.get(tree);
                 rouletteWheel.put(total, tree);
             }
         }
+    }
+
+    @Override
+    public String getName() {
+        return "Roulette Wheel Selection";
     }
 }

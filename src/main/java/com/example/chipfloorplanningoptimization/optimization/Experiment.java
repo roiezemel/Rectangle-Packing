@@ -8,25 +8,35 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
 
-public class Experiment {
+public class Experiment<T extends Representation<T>> {
 
-    private Optimizer op;
+    public enum Optimizers {
+        GENETIC_ALGORITHM,
+        SIMULATED_ANNEALING
+    }
+
+    private Optimizer<T> op;
 
     public Experiment() {}
 
-    public Experiment(Optimizer op) {
+    public Experiment(Optimizer<T> op) {
         setOptimizer(op);
     }
 
-    public void setOptimizer(Optimizer op) {
+    public void setOptimizer(Optimizer<T> op) {
         this.op = op;
     }
 
-    public <T extends Representation<T>> T run(T original, String inputName) throws IOException {
-        String exFolder = exDirectoryPath();
+    public T run(T original, String inputName) throws IOException {
+        return run(original, inputName, op.getName() + "/" + LocalDate.now());
+    }
+
+    public T run(T original, String inputName, String experimentFolder) throws IOException {
+        String exFolder = exDirectoryPath(experimentFolder);
         op.setDataCollector(exFolder);
 
         T optimized = op.optimize(original);
@@ -51,15 +61,16 @@ public class Experiment {
         return optimized;
     }
 
-    private String exDirectoryPath() throws IOException {
-        File file = new File("src/main/data");
+    private String exDirectoryPath(String relativeFolder) throws IOException {
+        String pathToFolder = "src/main/data/" + relativeFolder;
+        File file = new File(pathToFolder);
         String[] directories = file.list((current, name) -> new File(current, name).isDirectory());
         int exNumber = 0;
         if (directories != null && directories.length > 0) {
             String lastEx = Arrays.stream(directories).max(Comparator.comparingInt((this::toExNumber))).get();
             exNumber = toExNumber(lastEx) + 1;
         }
-        String path = "src/main/data/ex #" + exNumber;
+        String path = pathToFolder + "/ex #" + exNumber;
         Files.createDirectories(Paths.get(path));
         return path;
     }

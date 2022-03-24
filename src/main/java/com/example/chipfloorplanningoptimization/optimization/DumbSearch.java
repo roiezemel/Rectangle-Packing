@@ -7,18 +7,18 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
-public class DumbSearch implements Optimizer {
+public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
 
-    private final Cost cost;
+    private final NormCost cost;
     private DataCollector dc;
     private static final Random random = new Random();
 
-    public DumbSearch(Cost cost) {
+    public DumbSearch(NormCost cost) {
         this.cost = cost;
     }
 
     @Override
-    public <T extends Representation<T>> T optimize(T initialSolution) {
+    public T optimize(T initialSolution) {
         return optimize(initialSolution, 400000, true);
     }
 
@@ -93,5 +93,10 @@ public class DumbSearch implements Optimizer {
     @Override
     public void closeDataCollector() {
         dc.close();
+    }
+
+    @Override
+    public String getName() {
+        return "Dumb Search";
     }
 }

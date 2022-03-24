@@ -1,9 +1,14 @@
 package com.example.chipfloorplanningoptimization.optimization.genetic_algorithm;
 
 import com.example.chipfloorplanningoptimization.representation.BTree;
+import com.example.chipfloorplanningoptimization.representation.Representation;
 
-public interface Crossover {
+import java.util.List;
 
-    BTree[] crossover(BTree[] parents);
+public interface Crossover<T extends Representation<T>> {
+
+    List<T> crossover(List<T> parents);
+
+    String getName();
 
 }

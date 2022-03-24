@@ -2,18 +2,19 @@ package com.example.chipfloorplanningoptimization.optimization.genetic_algorithm
 
 import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
 import com.example.chipfloorplanningoptimization.representation.BTree;
+import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
-public class PartiallyMappedCrossover implements Crossover{
+public class PartiallyMappedCrossover<T extends Representation<T>> implements Crossover<T> {
 
     // PMX - partially-mapped crossover
 
     @Override
-    public BTree[] crossover(BTree[] parents) {
-        BTree p1 = parents[0], p2 = parents[1];
+    public List<T> crossover(List<T> parents) {
+        T p1 = parents.get(0), p2 = parents.get(1);
         List<NodeData> p1Data = Arrays.stream(p1
                         .serialize()
                         .replace("|", "|,")
@@ -67,7 +68,7 @@ public class PartiallyMappedCrossover implements Crossover{
         sub2.forEach(nodeData -> modulesByNamesC1.replace(nodeData.name, modulesByNamesC2.get(nodeData.name)));
         sub1.forEach(nodeData -> modulesByNamesC2.replace(nodeData.name, modulesByNamesP1.get(nodeData.name)));
 
-        return new BTree[] {BTree.deserialize(child1Data, modulesByNamesC1), BTree.deserialize(child2Data, modulesByNamesC2)};
+        return Arrays.asList(p1.deserialize(child1Data, modulesByNamesC1), p2.deserialize(child2Data, modulesByNamesC2));
     }
 
     private static class NodeData implements Cloneable {
@@ -95,6 +96,11 @@ public class PartiallyMappedCrossover implements Crossover{
             }
         }
 
+    }
+
+    @Override
+    public String getName() {
+        return "Partially-Mapped Crossover";
     }
 
 }

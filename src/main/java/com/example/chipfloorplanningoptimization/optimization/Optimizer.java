@@ -4,9 +4,9 @@ import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.io.IOException;
 
-public interface Optimizer {
+public interface Optimizer<T extends Representation<T>> {
 
-    <T extends Representation<T>> T optimize(T initialSolution);
+    T optimize(T initialSolution);
 
     void saveParams(String path) throws IOException;
 
@@ -15,5 +15,7 @@ public interface Optimizer {
     DataCollector getDataCollector();
 
     void closeDataCollector();
+
+    String getName();
 
 }

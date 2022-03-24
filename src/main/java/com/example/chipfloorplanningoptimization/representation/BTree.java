@@ -139,6 +139,7 @@ public class BTree implements Representation<BTree> {
         if (floorplan.getModules().isEmpty())
             return;
 
+        nodes = new LinkedList<>();
         Floorplan copyFloorplan = new Floorplan(floorplan);
         Queue<CModule> modules = copyFloorplan.getModulesQueue();
 
@@ -239,6 +240,7 @@ public class BTree implements Representation<BTree> {
      * Get a name to CModule map, with the ORIGINAL CModules!
      * @return name to CModule map
      */
+    @Override
     public HashMap<String, CModule> createNameModuleMap() {
         HashMap<String, CModule> modulesByNames = new HashMap<>();
         for (BNode<CModule> node : nodes)
@@ -272,7 +274,12 @@ public class BTree implements Representation<BTree> {
         serializeLeftBranch(pos.getLeft(), text, false);
     }
 
-    public static BTree deserialize(String text, HashMap<String, CModule> modulesByNames) {
+    @Override
+    public BTree deserialize(String text, HashMap<String, CModule> modulesByNames) {
+        return deserializeBTree(text, modulesByNames);
+    }
+
+    public static BTree deserializeBTree(String text, HashMap<String, CModule> modulesByNames) {
         List<BNode<CModule>> nodes = new LinkedList<>();
 
         String[] leftBranches = text.split("\\|");

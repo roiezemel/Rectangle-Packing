@@ -1,5 +1,5 @@
 package com.example.chipfloorplanningoptimization.optimization.simulated_annealing;
-import com.example.chipfloorplanningoptimization.optimization.Cost;
+import com.example.chipfloorplanningoptimization.optimization.NormCost;
 import com.example.chipfloorplanningoptimization.optimization.DataCollector;
 import com.example.chipfloorplanningoptimization.optimization.Optimizer;
 import com.example.chipfloorplanningoptimization.optimization.simulated_annealing.cooling_schedule.CoolingSchedule;
@@ -10,14 +10,14 @@ import java.io.IOException;
 import java.util.Random;
 import java.lang.Math;
 
-public class SimulatedAnnealing implements Optimizer {
+public class SimulatedAnnealing<T extends Representation<T>> implements Optimizer<T> {
 
     private final int iterations;    // number of iterations
     private final double finalTemperature;
     private double timeLimit;
     private double r; // the ratio by which the temperature is reduced each iteration
     private final double P; // initial probability of accepting an uphill solution
-    private final Cost cost;
+    private final NormCost<T> cost;
     private final double rejectQuitPercent;
     private static final Random random = new Random();
     private DataCollector dc;
@@ -33,7 +33,7 @@ public class SimulatedAnnealing implements Optimizer {
      *                          is greater than this number
      * @param cost a Cost object
      */
-    public SimulatedAnnealing(int iterations, double uphillProbability, double finalTemperature, double rejectQuitPercent, Cost cost) {
+    public SimulatedAnnealing(int iterations, double uphillProbability, double finalTemperature, double rejectQuitPercent, NormCost<T> cost) {
         this.r = 0.85;
         this.P = uphillProbability;
         this.iterations = iterations;
@@ -44,7 +44,7 @@ public class SimulatedAnnealing implements Optimizer {
         setDefaultCoolingSchedule(r);
     }
 
-    public SimulatedAnnealing(int iterations, double uphillProbability, double finalTemperature, double rejectQuitPercent, int timeLimit, Cost cost) {
+    public SimulatedAnnealing(int iterations, double uphillProbability, double finalTemperature, double rejectQuitPercent, int timeLimit, NormCost<T> cost) {
         this(iterations, uphillProbability, finalTemperature, rejectQuitPercent, cost);
         this.timeLimit = timeLimit;
     }
@@ -62,11 +62,11 @@ public class SimulatedAnnealing implements Optimizer {
         this.coolingSchedule = coolingSchedule;
     }
 
-    private <T extends Representation<T>> double calculateInitialTemperature(T initialSolution, int perturbations) {
+    private double calculateInitialTemperature(T initialSolution, int perturbations) {
         return -calculateAverageUphillCost(initialSolution, perturbations) / Math.log(P);
     }
 
-    private <T extends Representation<T>> double calculateAverageUphillCost(T initialSolution, int perturbations) {
+    private double calculateAverageUphillCost(T initialSolution, int perturbations) {
         T solution = initialSolution.copy();
         double avgCost = 0;
         double prevCost = cost.evaluate(solution);
@@ -90,7 +90,7 @@ public class SimulatedAnnealing implements Optimizer {
      * @return the represntation solution
      */
     @Override
-    public <T extends Representation<T>> T optimize(T initialSolution) {
+    public T optimize(T initialSolution) {
         T solution = initialSolution.copy();
         T bestSolution = initialSolution.copy();
         double lowestCost = cost.evaluate(bestSolution);
@@ -157,7 +157,8 @@ public class SimulatedAnnealing implements Optimizer {
     public void saveParams(String folderPath) throws IOException {
         FileWriter writer = new FileWriter(folderPath + "/params.txt");
         writer.write("Optimizer: Simulated Annealing\n");
-        writer.write("Cost weight (alpha): " + cost.getAlpha() + "\n");
+        writer.write("Cost Function: " + cost.getName() + "\n");
+        writer.write(cost.paramsDescription() + "\n");
         writer.write("Iterations (per temperature): " + iterations + "\n");
         writer.write("Initial uphill probability: " + P + "\n");
         writer.write("Minimum temperature: " + finalTemperature + "\n");
@@ -185,6 +186,11 @@ public class SimulatedAnnealing implements Optimizer {
     @Override
     public void closeDataCollector() {
         dc.close();
+    }
+
+    @Override
+    public String getName() {
+        return "Simulated Annealing";
     }
 
 }
