@@ -37,5 +37,7 @@ public interface Representation<T> {
      */
     void save(String path) throws IOException;
 
+    String serialize();
+
 
 }

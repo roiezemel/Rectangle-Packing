@@ -7,6 +7,7 @@ import com.example.chipfloorplanningoptimization.gui.IOManager;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class BTree implements Representation<BTree> {
 
@@ -232,6 +233,80 @@ public class BTree implements Representation<BTree> {
         }
 
         return new BTree(root, nodes);
+    }
+
+    /**
+     * Get a name to CModule map, with the ORIGINAL CModules!
+     * @return name to CModule map
+     */
+    public HashMap<String, CModule> createNameModuleMap() {
+        HashMap<String, CModule> modulesByNames = new HashMap<>();
+        for (BNode<CModule> node : nodes)
+            modulesByNames.put(node.getValue().getName(), node.getValue());
+        return modulesByNames;
+    }
+
+    @Override
+    public String serialize() {
+
+        BNode<CModule> pos = this.root;
+        StringBuilder text = new StringBuilder();
+        while (pos != null) {
+            serializeLeftBranch(pos, text, true);
+            pos = pos.getRight();
+        }
+
+        return text.toString();
+    }
+
+    private void serializeLeftBranch(BNode<CModule> pos, StringBuilder text, boolean first) {
+        if (pos == null) {
+            text.append("|");
+            return;
+        }
+
+        if (!first)
+            text.append(",");
+
+        text.append(pos.getValue().getName());
+        serializeLeftBranch(pos.getLeft(), text, false);
+    }
+
+    public static BTree deserialize(String text, HashMap<String, CModule> modulesByNames) {
+        List<BNode<CModule>> nodes = new LinkedList<>();
+
+        String[] leftBranches = text.split("\\|");
+
+        ArrayList<BNode<CModule>> rightBranch = new ArrayList<>(leftBranches.length);
+
+        for (String leftBranchData : leftBranches) {
+            ArrayList<BNode<CModule>> leftBranch = Arrays.stream(leftBranchData.split(","))
+                    .map( (name) -> {
+                        BNode<CModule> node = new BNode<>(new CModule(modulesByNames.get(name)), null);
+                        nodes.add(node);
+                        return node;})
+                    .collect(Collectors.toCollection(ArrayList::new));
+            buildBranch(leftBranch, true);
+            rightBranch.add(leftBranch.get(0));
+        }
+
+        buildBranch(rightBranch, false);
+
+        return new BTree(rightBranch.get(0), nodes);
+    }
+
+    private static void buildBranch(ArrayList<BNode<CModule>> nodes, boolean goLeft) {
+        if (nodes.size() <= 1) // no branch or one node => no need to make connections
+            return;
+
+        for (int i = 1; i < nodes.size(); i++) {
+            nodes.get(i).setParent(nodes.get(i - 1));
+
+            if (goLeft)
+                nodes.get(i - 1).setLeft(nodes.get(i));
+            else
+                nodes.get(i - 1).setRight(nodes.get(i));
+        }
     }
 
     public static BTree packFloorplan(Floorplan floorplan) {

@@ -1,4 +1,4 @@
-package com.example.chipfloorplanningoptimization.optimization.cooling_schedule;
+package com.example.chipfloorplanningoptimization.optimization.simulated_annealing.cooling_schedule;
 
 @FunctionalInterface
 public interface CoolingSchedule {

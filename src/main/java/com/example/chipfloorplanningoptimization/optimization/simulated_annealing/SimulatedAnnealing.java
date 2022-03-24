@@ -1,5 +1,8 @@
-package com.example.chipfloorplanningoptimization.optimization;
-import com.example.chipfloorplanningoptimization.optimization.cooling_schedule.CoolingSchedule;
+package com.example.chipfloorplanningoptimization.optimization.simulated_annealing;
+import com.example.chipfloorplanningoptimization.optimization.Cost;
+import com.example.chipfloorplanningoptimization.optimization.DataCollector;
+import com.example.chipfloorplanningoptimization.optimization.Optimizer;
+import com.example.chipfloorplanningoptimization.optimization.simulated_annealing.cooling_schedule.CoolingSchedule;
 import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.io.FileWriter;
@@ -7,7 +10,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.lang.Math;
 
-public class SimulatedAnnealing implements Optimizer{
+public class SimulatedAnnealing implements Optimizer {
 
     private final int iterations;    // number of iterations
     private final double finalTemperature;

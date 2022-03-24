@@ -2,10 +2,11 @@ package com.example.chipfloorplanningoptimization;
 
 import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
 import com.example.chipfloorplanningoptimization.gui.IOManager;
-import com.example.chipfloorplanningoptimization.optimization.*;
-import com.example.chipfloorplanningoptimization.optimization.cooling_schedule.ClimberSchedule;
-import com.example.chipfloorplanningoptimization.optimization.cooling_schedule.FastSA;
-import com.example.chipfloorplanningoptimization.optimization.cooling_schedule.WaveSchedule;
+import com.example.chipfloorplanningoptimization.optimization.Cost;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.Crossover;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.FitnessFunction;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.GeneticAlgorithm;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.PartiallyMappedCrossover;
 import com.example.chipfloorplanningoptimization.representation.BNode;
 import com.example.chipfloorplanningoptimization.representation.BTree;
 import com.example.chipfloorplanningoptimization.representation.Floorplan;
@@ -44,7 +45,6 @@ public class MainApplication extends Application {
 
         n2.setLeft(n1);
         n2.setRight(n3);
-
         n3.setLeft(n5);
         n3.setRight(n6);
 
@@ -60,29 +60,36 @@ public class MainApplication extends Application {
     }
 
     public Floorplan[] createFloorplans() throws IOException {
-//        Floorplan fileFloorplan = getFloorplanFromFile("n50.txt", "nets50.txt");
-        BTree original = createInitialSolution();
+        Floorplan fileFloorplan = getFloorplanFromFile("n30.txt", "nets30.txt");
 //        BTree original = BTree.loadTree("src/main/data/ex #34/n50-result.txt");
+//        BTree original = createInitialSolution();
+        BTree original = BTree.packFloorplan(fileFloorplan);
 
-        Floorplan originalFloorplan = original.unpack();
+        Cost cost = new Cost(original);
+        GeneticAlgorithm GA = new GeneticAlgorithm(10000, 0.01, cost, FitnessFunction.ReciprocalFitness);
+        BTree optimized = GA.optimize(original, 500)[0];
+
+
+//        Floorplan original1Floorplan = original.unpack();
 //        originalFloorplan.setNet(Objects.requireNonNull(fileFloorplan));
 
         // optimize
-        Cost cost =  new Cost(1, 100, original);
+//        Cost cost =  new Cost(1, 100, original);
 
 //        SimulatedAnnealing op = new SimulatedAnnealing(100000, 0.996,
 //                0, 1.0, 200, cost);
 //        op.setDefaultCoolingSchedule(0.85);
 //        op.setCoolingSchedule(new WaveSchedule(0.01, 0.3, 0.9));
 
-        Optimizer op = new DumbSearch(cost);
-        Experiment ex = new Experiment();
+//        Optimizer op = new DumbSearch(cost);
+//        Experiment ex = new Experiment();
 
-        ex.setOptimizer(op);
-        Floorplan optimizedFloorplan = ex.run(original, "custom").unpack();
+//        ex.setOptimizer(op);
+//        Floorplan optimizedFloorplan = ex.run(original, "custom").unpack();
 //        optimizedFloorplan.setNet(fileFloorplan);
 
-        return new Floorplan[] {originalFloorplan, optimizedFloorplan};
+//        return new Floorplan[] {originalFloorplan, optimizedFloorplan};
+        return new Floorplan[] {original.unpack(), optimized.unpack()};
     }
 
     private Floorplan getFloorplanFromFile(String blocksFilePath, String netFilePath) {

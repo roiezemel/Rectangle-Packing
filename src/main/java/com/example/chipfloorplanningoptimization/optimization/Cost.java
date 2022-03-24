@@ -11,6 +11,7 @@ public class Cost {
     private double Anorm;
     private double Wnorm;
     private final double alpha; // 0 < alpha < 1
+    private final double minArea; // the sum of areas of all rectangles
 
     /**
      * @param alpha "controls the weight between area and wirelength"
@@ -38,6 +39,18 @@ public class Cost {
         Wnorm /= perturbations; // average wirelength
         if (Wnorm == 0)
             Wnorm = 1;
+        minArea = initialSolution.unpack().getModules().stream()
+                .mapToDouble(module -> module.getWidth() * module.getHeight())
+                .sum();
+    }
+
+    public <T extends Representation<T>> Cost(T initialSolution) {
+        alpha = 1;
+        Wnorm = -1;
+        Anorm = -1;
+        minArea = initialSolution.unpack().getModules().stream()
+                .mapToDouble(module -> module.getWidth() * module.getHeight())
+                .sum();
     }
 
     /**
@@ -47,11 +60,21 @@ public class Cost {
      */
     public <T extends Representation<T>> double evaluate(T r) {
         Floorplan floorplan = r.unpack();
-        return alpha * (floorplan.area() / Anorm) + (1 - alpha) * (floorplan.totalWireLength() / Wnorm);
+        return evalByAreaAndWireLength(floorplan.area(), floorplan.totalWireLength());
+    }
+
+    private double evalByAreaAndWireLength(double area, double wireLength) {
+        if (Anorm > 0)
+            return alpha * (area / Anorm) + (1 - alpha) * (wireLength / Wnorm);
+        return area - minArea + 0.001; // to avoid division by zero
     }
 
     public double getAlpha() {
         return alpha;
+    }
+
+    public double getMinimumPossible() {
+        return evalByAreaAndWireLength(minArea, 0);
     }
 
 }

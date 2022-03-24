@@ -1,8 +1,7 @@
 package com.example.chipfloorplanningoptimization.optimization;
 
 import com.example.chipfloorplanningoptimization.gui.DataVisualizer;
-import com.example.chipfloorplanningoptimization.representation.BTree;
-import com.example.chipfloorplanningoptimization.representation.Floorplan;
+import com.example.chipfloorplanningoptimization.optimization.Optimizer;
 import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.io.File;
