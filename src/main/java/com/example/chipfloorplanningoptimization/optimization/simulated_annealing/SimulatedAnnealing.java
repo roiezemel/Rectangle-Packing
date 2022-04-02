@@ -1,5 +1,6 @@
 package com.example.chipfloorplanningoptimization.optimization.simulated_annealing;
-import com.example.chipfloorplanningoptimization.optimization.NormCost;
+import com.example.chipfloorplanningoptimization.optimization.costs.Cost;
+import com.example.chipfloorplanningoptimization.optimization.costs.NormCost;
 import com.example.chipfloorplanningoptimization.optimization.DataCollector;
 import com.example.chipfloorplanningoptimization.optimization.Optimizer;
 import com.example.chipfloorplanningoptimization.optimization.simulated_annealing.cooling_schedule.CoolingSchedule;
@@ -7,6 +8,8 @@ import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.lang.Math;
 
@@ -19,6 +22,7 @@ public class SimulatedAnnealing<T extends Representation<T>> implements Optimize
     private final double P; // initial probability of accepting an uphill solution
     private final NormCost<T> cost;
     private final double rejectQuitPercent;
+    private List<T> progress;
     private static final Random random = new Random();
     private DataCollector dc;
     private CoolingSchedule coolingSchedule;
@@ -99,6 +103,8 @@ public class SimulatedAnnealing<T extends Representation<T>> implements Optimize
         T prevSolution = solution.copy();
         double prevCost = lowestCost;
 
+        progress = new LinkedList<>();
+
         System.out.println("Starting with temperature: " + T);
         System.out.println("Cost: " + lowestCost);
         int count = 0;
@@ -124,6 +130,7 @@ public class SimulatedAnnealing<T extends Representation<T>> implements Optimize
                 else if (newCost < lowestCost) {
                     lowestCost = newCost;
                     bestSolution = solution.copy();
+                    progress.add(bestSolution.copy());
                 }
 
                 prevSolution = solution.copy();
@@ -163,9 +170,14 @@ public class SimulatedAnnealing<T extends Representation<T>> implements Optimize
         writer.write("Initial uphill probability: " + P + "\n");
         writer.write("Minimum temperature: " + finalTemperature + "\n");
         writer.write("Reduce ratio: " + r + "\n");
-        writer.write("Quit at reject/iterations > " + rejectQuitPercent + "\n");
+        writer.write("Quit at rejections/iterations > " + rejectQuitPercent + "\n");
         writer.write("Cooling Schedule: " + coolingSchedule.getName());
         writer.close();
+    }
+
+    @Override
+    public Cost<T> getCost() {
+        return cost;
     }
 
     @Override
@@ -191,6 +203,11 @@ public class SimulatedAnnealing<T extends Representation<T>> implements Optimize
     @Override
     public String getName() {
         return "Simulated Annealing";
+    }
+
+    @Override
+    public List<T> getProgress() {
+        return progress;
     }
 
 }

@@ -8,9 +8,11 @@ import com.example.chipfloorplanningoptimization.representation.Floorplan;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Utils {
 
@@ -55,6 +57,32 @@ public class Utils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static Floorplan loadSolution(String filePath) throws FileNotFoundException {
+        return BTree.loadTree(filePath).unpack();
+    }
+
+    public static Floorplan loadSolution(String filePath, String infoFileName) throws FileNotFoundException {
+        Floorplan result = loadSolution(filePath);
+        Floorplan fileFloorplan = getFloorplanFromFile(infoFileName, infoFileName.replaceFirst("n", "nets"));
+        result.setNet(Objects.requireNonNull(fileFloorplan));
+        return result;
+    }
+
+    static Floorplan[] getProgress(String progressFolder) {
+        File folder = new File(progressFolder);
+        return Arrays.stream(Objects.requireNonNull(folder.listFiles()))
+                .map(f -> Integer.parseInt(f.getName().replace(".txt", "")))
+                .collect(Collectors.toList()).stream().sorted()
+                .map(index -> {
+                    try {
+                        return loadSolution(progressFolder + "/" + index + ".txt");
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    return new Floorplan();
+                }).toArray(Floorplan[]::new);
     }
 
 }

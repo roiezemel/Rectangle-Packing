@@ -1,32 +1,46 @@
 package com.example.chipfloorplanningoptimization.optimization;
 
+import com.example.chipfloorplanningoptimization.optimization.costs.Cost;
+import com.example.chipfloorplanningoptimization.optimization.costs.NormCost;
 import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
 
-    private final NormCost cost;
+    private final Cost<T> cost;
     private DataCollector dc;
+    private List<T> progress;
     private static final Random random = new Random();
+    private boolean initiallyPerturb = true;
 
-    public DumbSearch(NormCost cost) {
+    public DumbSearch(Cost<T> cost) {
         this.cost = cost;
+    }
+
+    public DumbSearch(Cost<T> cost, boolean initiallyPerturb) {
+        this(cost);
+        this.initiallyPerturb = initiallyPerturb;
     }
 
     @Override
     public T optimize(T initialSolution) {
-        return optimize(initialSolution, 400000, true);
+        return optimize(initialSolution, 1000000, true);
     }
 
-    private <T extends Representation<T>> T optimize(T initialSolution, int its, boolean mutate) {
+    private T optimize(T initialSolution, int its, boolean mutate) {
         T copy = initialSolution.copy();
-        if (mutate)
-            for (int i = 0; i < 10; i++)
-                copy.perturb();
+        if (mutate) {
+            if (initiallyPerturb)
+                for (int i = 0; i < 10; i++)
+                    copy.perturb();
+            progress = new LinkedList<>();
+        }
         double lcost = cost.evaluate(copy);
         double sum = 0;
         int[] dis = new int[200];
@@ -48,6 +62,10 @@ public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
             if (newCost < lcost) {
                 lcost = newCost;
                 copy = local;
+
+                if (progress.size() <= i / 100) {
+                    progress.add(copy.copy());
+                }
             }
             sum += newCost;
 
@@ -73,8 +91,14 @@ public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
     public void saveParams(String path) throws IOException {
         FileWriter writer = new FileWriter(path + "/params.txt");
         writer.write("Optimizer: Dumb Search\n");
-        writer.write("Cost weight (alpha): " + cost.getAlpha() + "\n");
+        writer.write("Cost Function: " + cost.getName() + "\n");
+        writer.write(cost.paramsDescription() + "\n");
         writer.close();
+    }
+
+    @Override
+    public Cost<T> getCost() {
+        return cost;
     }
 
     @Override
@@ -98,5 +122,10 @@ public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
     @Override
     public String getName() {
         return "Dumb Search";
+    }
+
+    @Override
+    public List<T> getProgress() {
+        return progress;
     }
 }

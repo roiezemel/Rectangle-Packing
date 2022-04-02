@@ -1,0 +1,9 @@
+Optimizer: Genetic Algorithm
+Cost Function: Dead-Area Cost
+=> Minimum area (sum of areas of all rectangles): 198579.0
+Population size: 10000
+Mutation rate: 0.001
+Max generations: 500
+Crossover: Partially-Mapped Crossover
+Selection: Roulette Wheel Selection
+Fitness Function: Reciprocal Fitness

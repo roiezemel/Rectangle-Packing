@@ -1,28 +1,22 @@
 package com.example.chipfloorplanningoptimization;
 
-import com.example.chipfloorplanningoptimization.abstract_structures.CModule;
-import com.example.chipfloorplanningoptimization.gui.IOManager;
-import com.example.chipfloorplanningoptimization.optimization.Cost;
-import com.example.chipfloorplanningoptimization.optimization.DeadAreaCost;
-import com.example.chipfloorplanningoptimization.optimization.NormCost;
-import com.example.chipfloorplanningoptimization.optimization.Experiment;
-import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.GeneticAlgorithm;
-import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.fitness_functions.ReciprocalFitness;
-import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.fitness_functions.RegularFitness;
-import com.example.chipfloorplanningoptimization.representation.BNode;
-import com.example.chipfloorplanningoptimization.representation.BTree;
 import com.example.chipfloorplanningoptimization.representation.Floorplan;
 import javafx.application.Application;
+import javafx.concurrent.Task;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.stream.IntStream;
 
 public class MainApplication extends Application {
 
@@ -40,9 +34,17 @@ public class MainApplication extends Application {
         stage.setScene(scene);
 
         Floorplan[] floorplans = Lab.lab();
-        ((MainController)loader.getController()).start(stage, floorplans);
+        MainController controller = loader.getController();
+        controller.start(stage, floorplans);
+
         stage.show();
+
     }
+
+
+
+
+
 
 }
 

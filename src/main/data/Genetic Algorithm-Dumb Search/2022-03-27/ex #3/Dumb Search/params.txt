@@ -1,0 +1,5 @@
+Optimizer: Dumb Search
+Cost Function: Square Cost
+=> Cost weight (alpha): 0.6
+=> Anorm: 505141.42
+=> Snorm: 0.37361693249271305

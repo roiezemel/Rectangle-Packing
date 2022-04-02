@@ -13,6 +13,8 @@ public class Floorplan {
     private final List<CModule> modules;
     private final Map<String, CModule> modulesByNames;
     private List<List<CModule>> net;
+    private String saveTo = null;
+    private String name = "";
 
     /**
      * Initialize floorplan
@@ -118,6 +120,14 @@ public class Floorplan {
         return length;
     }
 
+    public double getSidesRatio() {
+        Rectangle rect = getBoundingBox();
+        double ratio = rect.getWidth() / rect.getHeight();
+        if (ratio < 1)
+            return ratio;
+        return 1 / ratio;
+    }
+
     public List<CModule> getModules() {
         return modules;
     }
@@ -128,5 +138,21 @@ public class Floorplan {
 
     public Rectangle getBoundingBox() {
         return new Rectangle(min.x(), min.y(), max.x() - min.x(), max.y() - min.y());
+    }
+
+    public String getSaveTo() {
+        return saveTo;
+    }
+
+    public void setSaveTo(String saveTo) {
+        this.saveTo = saveTo;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 }

@@ -1,0 +1,11 @@
+Optimizer: Simulated Annealing
+Cost Function: Square Cost
+=> Cost weight (alpha): 0.6
+=> Anorm: 333554.41
+=> Snorm: 0.8835297569922509
+Iterations (per temperature): 100000
+Initial uphill probability: 0.999
+Minimum temperature: 1.0E-6
+Reduce ratio: 0.85
+Quit at rejections/iterations > 0.9999
+Cooling Schedule: Default

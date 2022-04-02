@@ -3,6 +3,7 @@ module com.example.chipfloorplanningoptimization {
     requires javafx.fxml;
     requires javafx.graphics;
     requires org.knowm.xchart;
+    requires java.desktop;
 
     exports com.example.chipfloorplanningoptimization;
     opens com.example.chipfloorplanningoptimization to javafx.fxml;
@@ -16,4 +17,6 @@ module com.example.chipfloorplanningoptimization {
     opens com.example.chipfloorplanningoptimization.optimization.simulated_annealing to javafx.fxml;
     exports com.example.chipfloorplanningoptimization.representation;
     opens com.example.chipfloorplanningoptimization.representation to javafx.fxml;
+    exports com.example.chipfloorplanningoptimization.optimization.costs;
+    opens com.example.chipfloorplanningoptimization.optimization.costs to javafx.fxml;
 }

@@ -1,41 +1,47 @@
 package com.example.chipfloorplanningoptimization.optimization.genetic_algorithm;
 
-import com.example.chipfloorplanningoptimization.optimization.Cost;
-import com.example.chipfloorplanningoptimization.optimization.NormCost;
+import com.example.chipfloorplanningoptimization.optimization.costs.Cost;
 import com.example.chipfloorplanningoptimization.optimization.DataCollector;
 import com.example.chipfloorplanningoptimization.optimization.Optimizer;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.crossover.Crossover;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.crossover.PartiallyMappedCrossover;
 import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.fitness_functions.FitnessFunction;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.mutation.Mutation;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.selection.RouletteSelection;
+import com.example.chipfloorplanningoptimization.optimization.genetic_algorithm.selection.Selection;
 import com.example.chipfloorplanningoptimization.representation.Representation;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<T> {
 
     private final int populationSize;
-    private final double mutationRate;
     private final int generations;
     private final Crossover<T> cross;
     private final Selection<T> selector;
     private final FitnessFunction<T> fitnessFunction;
     private final Cost<T> cost;
+    private final Mutation<T> mutation;
+    private List<T> progress;
     private DataCollector dc;
 
-    public GeneticAlgorithm(int populationSize, double mutationRate, int generations, Crossover<T> cross, Selection<T> selector, Cost<T> cost, FitnessFunction<T> fitnessFunction) {
+    public GeneticAlgorithm(int populationSize, int generations, Crossover<T> cross, Selection<T> selector, Cost<T> cost, FitnessFunction<T> fitnessFunction, Mutation<T> mutation) {
         this.populationSize = populationSize;
-        this.mutationRate = mutationRate;
         this.generations = generations;
         this.cross = cross;
         this.selector = selector;
         this.cost = cost;
         this.fitnessFunction = fitnessFunction;
+        this.mutation = mutation;
     }
 
-    public GeneticAlgorithm(int populationSize, double mutationRate, int generations, Cost<T> cost, FitnessFunction<T> fitnessFunction) {
-        this(populationSize, mutationRate, generations, new PartiallyMappedCrossover<>(), new RouletteSelection<>(), cost, fitnessFunction);
+    public GeneticAlgorithm(int populationSize, int generations, Cost<T> cost, FitnessFunction<T> fitnessFunction, Mutation<T> mutation) {
+        this(populationSize, generations, new PartiallyMappedCrossover<>(), new RouletteSelection<>(), cost, fitnessFunction, mutation);
     }
 
     @Override
@@ -44,6 +50,8 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
         ArrayList<T> population = createInitialPopulation(initialSolution, populationSize);
         HashMap<T, Double> fitness = fitnessFunction.apply(population, cost);
         selector.updatePopulation(population, fitness);
+
+        progress = new LinkedList<>();
 
         T bestSolution = getCurrentBestSolution(population, fitness);
         double lowestCost = cost.evaluate(bestSolution);
@@ -55,11 +63,12 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
                 List<T> children = cross.crossover(selector.select());
                 for (T child : children) {
                     // Mutation:
-                    if (Math.random() < mutationRate)
-                        child.perturb();
+                    mutation.mutate(child, i, lowestCost);
                     newPopulation.add(child);
                 }
             }
+
+            dc.getLogger("Generation", "Mutation Rate").log(i, mutation.getMutationRate());
 
             // New population
             population = newPopulation;
@@ -73,6 +82,9 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
             if (cost.evaluate(currentBest) < lowestCost) {
                 bestSolution = currentBest;
                 lowestCost = cost.evaluate(currentBest);
+
+                if (progress.size() <= i / 20)
+                    progress.add(bestSolution.copy());
             }
             dc.getLogger("Generation", "Lowest Cost So Far").log(i, lowestCost);
             if (lowestCost == cost.getMinimumPossible())
@@ -119,12 +131,18 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
         writer.write("Cost Function: " + cost.getName() + "\n");
         writer.write(cost.paramsDescription() + "\n");
         writer.write("Population size: " + populationSize + "\n");
-        writer.write("Mutation rate: " + mutationRate + "\n");
         writer.write("Max generations: " + generations + "\n");
         writer.write("Crossover: " + cross.getName() + "\n");
         writer.write("Selection: " + selector.getName() + "\n");
-        writer.write("Fitness Function: " + fitnessFunction.getName());
+        writer.write("Fitness Function: " + fitnessFunction.getName() + "\n");
+        writer.write("Mutation: " + mutation.getName() + "\n");
+        writer.write(mutation.paramsDescription());
         writer.close();
+    }
+
+    @Override
+    public Cost<T> getCost() {
+        return cost;
     }
 
     @Override
@@ -133,6 +151,7 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
         dc.addLogger("Generation", "Current Lowest Cost");
         dc.addLogger("Generation", "Lowest Cost So Far");
         dc.addLogger("Generation", "Average Cost");
+        dc.addLogger("Generation", "Mutation Rate");
     }
 
     @Override
@@ -148,5 +167,10 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
     @Override
     public String getName() {
         return "Genetic Algorithm";
+    }
+
+    @Override
+    public List<T> getProgress() {
+        return progress;
     }
 }

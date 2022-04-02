@@ -32,6 +32,8 @@ public class CanvasPagesView {
     private final Text scaleText;
     private final Text headline;
     private final Rectangle boundingRect;
+    private Button next;
+    private Button back;
 
     public CanvasPagesView(Painter painter, int numPages, Stage stage, Group root) {
         this.painter = painter;
@@ -40,14 +42,14 @@ public class CanvasPagesView {
         this.root = root;
         headline = new Text();
         headline.setFill(Color.WHITE);
-        headline.setFont(Font.font("Ariel", FontWeight.BOLD, 30));
-        headline.setX(50);
+        headline.setFont(Font.font("Ariel", FontWeight.BOLD, 20));
+        headline.setX(40);
         headline.setY(50);
 
         scaleText = new Text("Scale: 1.0");
         scaleText.setFill(Color.WHITE);
         scaleText.setFont(Font.font("Ariel", FontWeight.BOLD, 20));
-        scaleText.setX(500);
+        scaleText.setX(580);
         scaleText.setY(50);
         boundingRect = new Rectangle(10, 60, getWidth() - 20, getHeight() - 110);
         boundingRect.setFill(stage.getScene().getFill());
@@ -75,9 +77,10 @@ public class CanvasPagesView {
 
         back.setOnAction(e -> {
             if (index > 0) {
-                clear();
-                painter.draw(--index);
+                --index;
             }
+            clear();
+            painter.draw(index);
         });
 
         toggleWires.setOnAction(e -> {
@@ -103,6 +106,8 @@ public class CanvasPagesView {
         };
         stage.widthProperty().addListener(stageSizeListener);
         stage.heightProperty().addListener(stageSizeListener);
+        this.next = next;
+        this.back = back;
     }
 
     public void setTitle(String title) {
@@ -211,11 +216,24 @@ public class CanvasPagesView {
         drawShape(line);
     }
 
-    private void clear() {
+    public void clear() {
         root.getChildren().removeIf(s -> s instanceof Shape);
         root.getChildren().add(scaleText);
         root.getChildren().add(headline);
         root.getChildren().add(boundingRect);
     }
+
+    public Stage getStage() {
+        return stage;
+    }
+
+    public Button getNext() {
+        return next;
+    }
+
+    public Button getBack() {
+        return back;
+    }
+
 
 }

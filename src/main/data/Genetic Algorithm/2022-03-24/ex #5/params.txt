@@ -1,0 +1,11 @@
+Optimizer: Genetic Algorithm
+Cost Function: Square Cost
+=> Cost weight (alpha): 0.6
+=> Anorm: 368073.165
+=> Snorm: 0.8025581928163759
+Population size: 10000
+Mutation rate: 0.001
+Max generations: 2000
+Crossover: Partially-Mapped Crossover
+Selection: Roulette Wheel Selection
+Fitness Function: Reciprocal Fitness

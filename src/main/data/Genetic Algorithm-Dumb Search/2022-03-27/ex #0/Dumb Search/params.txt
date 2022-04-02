@@ -1,0 +1,3 @@
+Optimizer: Dumb Search
+Cost Function: Dead-Area Cost
+=> Minimum area (sum of areas of all rectangles): 273170.0
