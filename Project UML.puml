@@ -1,0 +1,33 @@
+@startuml
+
+class MainApplication {
+}
+interface optimization.Optimizer {
+}
+
+class representation.Floorplan {
+}
+interface representation.Representation {
+}
+class representation.BTree {
+}
+class optimization.simulated_annealing.SimulatedAnnealing {
+}
+class Utils {
+}
+class MainController {
+}
+class optimization.genetic_algorithm.GeneticAlgorithm {
+}
+class optimization.Experiment {
+}
+class Lab {
+}
+
+
+javafx.application.Application <|-- MainApplication
+representation.Representation <|.. representation.BTree
+optimization.Optimizer <|.. optimization.simulated_annealing.SimulatedAnnealing
+gui.Painter <|.. MainController
+optimization.Optimizer <|.. optimization.genetic_algorithm.GeneticAlgorithm
+@enduml

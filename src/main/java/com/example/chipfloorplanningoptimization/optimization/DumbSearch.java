@@ -13,26 +13,53 @@ import java.util.Random;
 
 public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
 
+    /*
+        This class is not yet optimal since it was the last to be developed
+     */
+
     private final Cost<T> cost;
     private DataCollector dc;
     private List<T> progress;
     private static final Random random = new Random();
     private boolean initiallyPerturb = true;
 
+    /**
+     * Initialize DumbSearch
+     * @param cost Cost function
+     */
     public DumbSearch(Cost<T> cost) {
         this.cost = cost;
     }
 
+    /**
+     * Initialize DumbSearch
+     * @param cost Cost function
+     * @param initiallyPerturb how many perturbations to perform before the optimization starts
+     */
     public DumbSearch(Cost<T> cost, boolean initiallyPerturb) {
         this(cost);
         this.initiallyPerturb = initiallyPerturb;
     }
 
+    /**
+     * Optimize a solution
+     * @param initialSolution the initial solution
+     * @return an optimized solution
+     */
     @Override
     public T optimize(T initialSolution) {
         return optimize(initialSolution, 1000000, true);
     }
 
+    /**
+     * Optimize a solution on a single "branch". Since this algorithm is recursive,
+     * this method is called multiple times on different "branches".
+     * @param initialSolution initial solution
+     * @param its number of iterations to perform
+     * @param mutate whether to activate the mutation stage (should only be true on main branch,
+     *               called by the second optimize() method)
+     * @return an optimized solution
+     */
     private T optimize(T initialSolution, int its, boolean mutate) {
         T copy = initialSolution.copy();
         if (mutate) {
@@ -50,16 +77,18 @@ public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
 //            int perts = (random.nextInt(100)) + 1;
             if (perts < dis.length)
                 dis[perts]++;
-            for (int j = 0; j < perts; j++)
+            for (int j = 0; j < perts; j++) // perturb current solution
                 local.perturb();
-            double newCost = cost.evaluate(local);
+            double newCost = cost.evaluate(local); // neighbor's Cost
             T mutation;
             double mutationCost;
+
+            // Send solution to a "mutation branch" in a recursive manner
             if (mutate && Math.random() < 0.1 && (mutationCost = cost.evaluate(mutation = optimize(local, 100, false))) < newCost) {
                 local = mutation;
                 newCost = mutationCost;
             }
-            if (newCost < lcost) {
+            if (newCost < lcost) { // update best solution
                 lcost = newCost;
                 copy = local;
 
@@ -69,7 +98,7 @@ public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
             }
             sum += newCost;
 
-            if (mutate && i % 10000 == 0) {
+            if (mutate && i % 10000 == 0) { // Update loggers
                 dc.getLogger("Time", "Lowest Cost").log(i / 10000., lcost);
                 dc.getLogger("Time", "Average Cost").log(i / 10000., sum / 10000);
                 sum = 0;
@@ -86,7 +115,11 @@ public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
         return copy;
     }
 
-
+    /**
+     * Save the parameters of the algorithm
+     * @param path data folder in  which the params.txt file will be saved
+     * @throws IOException
+     */
     @Override
     public void saveParams(String path) throws IOException {
         FileWriter writer = new FileWriter(path + "/params.txt");
@@ -96,11 +129,19 @@ public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
         writer.close();
     }
 
+    /**
+     * Get the Cost function
+     * @return
+     */
     @Override
     public Cost<T> getCost() {
         return cost;
     }
 
+    /**
+     * Set the data collector instance to track certain metrics
+     * @param outputDirectory data folder
+     */
     @Override
     public void setDataCollector(String outputDirectory) {
         this.dc = new DataCollector(outputDirectory);
@@ -109,21 +150,36 @@ public class DumbSearch<T extends Representation<T>> implements Optimizer<T> {
         dc.addLogger("Perturbations", "Probability");
     }
 
+    /**
+     * Get the DataCollector instance
+     * @return
+     */
     @Override
     public DataCollector getDataCollector() {
         return dc;
     }
 
+    /**
+     * Close data collector
+     */
     @Override
     public void closeDataCollector() {
         dc.close();
     }
 
+    /**
+     * Get algorithm name
+     * @return
+     */
     @Override
     public String getName() {
         return "Dumb Search";
     }
 
+    /**
+     * Get list of solutions representing the progress of the algorithm
+     * @return
+     */
     @Override
     public List<T> getProgress() {
         return progress;

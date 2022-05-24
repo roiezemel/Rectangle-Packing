@@ -30,6 +30,16 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
     private List<T> progress;
     private DataCollector dc;
 
+    /**
+     * Initialize Genetic Algorithm
+     * @param populationSize population size
+     * @param generations number of total generations
+     * @param cross Crossover function
+     * @param selector selection type
+     * @param cost Cost function
+     * @param fitnessFunction Fitness Function
+     * @param mutation Mutation type
+     */
     public GeneticAlgorithm(int populationSize, int generations, Crossover<T> cross, Selection<T> selector, Cost<T> cost, FitnessFunction<T> fitnessFunction, Mutation<T> mutation) {
         this.populationSize = populationSize;
         this.generations = generations;
@@ -40,10 +50,23 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
         this.mutation = mutation;
     }
 
+    /**
+     * Initialize Genetic Algorithm
+     * @param populationSize population size
+     * @param generations number of total generations
+     * @param cost Cost function
+     * @param fitnessFunction Fitness Function
+     * @param mutation Mutation type
+     */
     public GeneticAlgorithm(int populationSize, int generations, Cost<T> cost, FitnessFunction<T> fitnessFunction, Mutation<T> mutation) {
         this(populationSize, generations, new PartiallyMappedCrossover<>(), new RouletteSelection<>(), cost, fitnessFunction, mutation);
     }
 
+    /**
+     * Optimize a solution
+     * @param initialSolution the initial solution
+     * @return an optimized solution
+     */
     @Override
     public T optimize(T initialSolution) {
         // Initial population
@@ -104,12 +127,24 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
         return bestSolution;
     }
 
+    /**
+     * Get the best solution according to the population's fitness values
+     * @param population population
+     * @param fitness a solution-to-fitness map
+     * @return best solution
+     */
     private T getCurrentBestSolution(ArrayList<T> population, HashMap<T, Double> fitness) {
         return population.stream()
                 .reduce((a, b) -> (fitness.get(a) > fitness.get(b) ? a : b))
                 .orElse(null);
     }
 
+    /**
+     * Create a randomly perturbed initial population based on the initial solution
+     * @param initialSolution initial solution
+     * @param populationSize population size
+     * @return list of solutions
+     */
     private ArrayList<T> createInitialPopulation(T initialSolution, int populationSize) {
         ArrayList<T> population = new ArrayList<>(populationSize + 1);
 
@@ -124,6 +159,11 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
         return population;
     }
 
+    /**
+     * Save the parameters of the algorithm
+     * @param folderPath data folder in  which the params.txt file will be saved
+     * @throws IOException
+     */
     @Override
     public void saveParams(String folderPath) throws IOException {
         FileWriter writer = new FileWriter(folderPath + "/params.txt");
@@ -140,11 +180,19 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
         writer.close();
     }
 
+    /**
+     * Get the Cost function
+     * @return
+     */
     @Override
     public Cost<T> getCost() {
         return cost;
     }
 
+    /**
+     * Set the data collector instance to track certain metrics
+     * @param outputDirectory data folder
+     */
     @Override
     public void setDataCollector(String outputDirectory) {
         this.dc = new DataCollector(outputDirectory);
@@ -154,21 +202,36 @@ public class GeneticAlgorithm<T extends Representation<T>> implements Optimizer<
         dc.addLogger("Generation", "Mutation Rate");
     }
 
+    /**
+     * Get the DataCollector instance
+     * @return
+     */
     @Override
     public DataCollector getDataCollector() {
         return dc;
     }
 
+    /**
+     * Close data collector
+     */
     @Override
     public void closeDataCollector() {
         dc.close();
     }
 
+    /**
+     * Get algorithm name
+     * @return
+     */
     @Override
     public String getName() {
         return "Genetic Algorithm";
     }
 
+    /**
+     * Get list of solutions representing the progress of the algorithm
+     * @return
+     */
     @Override
     public List<T> getProgress() {
         return progress;

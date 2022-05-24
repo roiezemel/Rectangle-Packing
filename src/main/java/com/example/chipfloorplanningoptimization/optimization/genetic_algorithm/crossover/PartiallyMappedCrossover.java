@@ -11,9 +11,16 @@ public class PartiallyMappedCrossover<T extends Representation<T>> implements Cr
 
     // PMX - partially-mapped crossover
 
+    /**
+     * Perform the Crossover operation
+     * @param parents list of two parents
+     * @return list of two children
+     */
     @Override
     public List<T> crossover(List<T> parents) {
         T p1 = parents.get(0), p2 = parents.get(1);
+
+        // Serialize
         List<NodeData> p1Data = Arrays.stream(p1
                         .serialize()
                         .replace("|", "|,")
@@ -27,12 +34,14 @@ public class PartiallyMappedCrossover<T extends Representation<T>> implements Cr
                 .map(NodeData::new)
                 .collect(Collectors.toList());
 
+        // Cut randomly
         int firstCut = ThreadLocalRandom.current().nextInt(0, p1Data.size() - 1);
         int secondCut = ThreadLocalRandom.current().nextInt(firstCut + 1, p1Data.size());
 
         List<NodeData> sub1 = new ArrayList<>(p1Data.subList(firstCut, secondCut + 1));
         List<NodeData> sub2 = new ArrayList<>(p2Data.subList(firstCut, secondCut + 1));
 
+        // Replace parts
         p1Data.removeAll(sub1);
         p2Data.removeAll(sub2);
         p1Data.addAll(sub2.stream().map(NodeData::clone).collect(Collectors.toList()));
@@ -51,6 +60,7 @@ public class PartiallyMappedCrossover<T extends Representation<T>> implements Cr
                     .get().name = sub2.get(i).name;
         }
 
+        // Fix overlaps
         for (int i = 0; i < sub1.size(); i++) {
             p1Data.add(i + firstCut, p1Data.remove(i + p1Data.size() - secondCut + firstCut - 1));
             p2Data.add(i + firstCut, p2Data.remove(i + p2Data.size() - secondCut + firstCut - 1));
@@ -59,6 +69,7 @@ public class PartiallyMappedCrossover<T extends Representation<T>> implements Cr
         String child1Data = p1Data.stream().map(NodeData::toString).collect(Collectors.joining(",")).replace("|,", "|");
         String child2Data = p2Data.stream().map(NodeData::toString).collect(Collectors.joining(",")).replace("|,", "|");
 
+        // Deserialize
         HashMap<String, CModule> modulesByNamesP1 = p1.createNameModuleMap();
 
         HashMap<String, CModule> modulesByNamesC1 = p1.createNameModuleMap();
@@ -75,17 +86,32 @@ public class PartiallyMappedCrossover<T extends Representation<T>> implements Cr
         public String name;
         public String postfix;
 
+        /**
+         * Initialize NodeData
+         */
         public NodeData() {}
 
+        /**
+         * Initialize NodeData
+         * @param data
+         */
         public NodeData(String data) {
             this.name = data.replace("|", "");
             this.postfix = data.endsWith("|") ? "|" : "";
         }
 
+        /**
+         * To String
+         * @return
+         */
         public String toString() {
             return name + postfix;
         }
 
+        /**
+         * Clone NodeData
+         * @return
+         */
         @Override
         public NodeData clone() {
             try {
@@ -97,6 +123,10 @@ public class PartiallyMappedCrossover<T extends Representation<T>> implements Cr
 
     }
 
+    /**
+     * Get Crossover name
+     * @return
+     */
     @Override
     public String getName() {
         return "Partially-Mapped Crossover";

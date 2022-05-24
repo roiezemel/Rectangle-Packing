@@ -33,6 +33,10 @@ public class Floorplan {
         modules.forEach(this::addModule);
     }
 
+    /**
+     * Initialize floorplan with another floorplan (deep copy)
+     * @param f another floorplan
+     */
     public Floorplan(Floorplan f) {
         this();
         f.getModules().forEach(m -> addModule(new CModule(m)));
@@ -61,6 +65,10 @@ public class Floorplan {
         modulesByNames.put(module.getName(), module);
     }
 
+    /**
+     * Set the net of the floorplan
+     * @param net list containing lists of names of connected modules
+     */
     public void setNet(List<List<String>> net) {
         if (net == null)
             return;
@@ -73,15 +81,27 @@ public class Floorplan {
         });
     }
 
+    /**
+     * Set the net according to another floorplan
+     * @param other another floorplan.
+     */
     public void setNet(Floorplan other) {
         if (other.net != null)
             setNet(other.getNameNet());
     }
 
+    /**
+     * Get the net information.
+     * @return list containing lists of names of connected modules.
+     */
     public List<List<CModule>> getNet() {
         return net;
     }
 
+    /**
+     * Get a list containing lists of names of connected modules.
+     * @return list containing lists of names of connected modules.
+     */
     public List<List<String>> getNameNet() {
         if (net == null)
            return null;
@@ -101,6 +121,10 @@ public class Floorplan {
         return (max.x() - min.x()) * (max.y() - min.y());
     }
 
+    /**
+     * Get the total wire length between the modules.
+     * @return total wire length (sum of distances of all connections).
+     */
     public double totalWireLength() {
         if (net == null || net.isEmpty())
             return 0;
@@ -120,6 +144,11 @@ public class Floorplan {
         return length;
     }
 
+    /**
+     * Get the ratio between the sides of the bounding rectangle.
+     * The ratio is always smaller than 1.
+     * @return ratio between the sides of the bounding rectangle.
+     */
     public double getSidesRatio() {
         Rectangle rect = getBoundingBox();
         double ratio = rect.getWidth() / rect.getHeight();
@@ -128,30 +157,62 @@ public class Floorplan {
         return 1 / ratio;
     }
 
+    /**
+     * Get list of modules.
+     * @return list of CModules.
+     */
     public List<CModule> getModules() {
         return modules;
     }
 
+    /**
+     * Get a queue of modules.
+     * @return queue of CModules.
+     */
     public Queue<CModule> getModulesQueue() {
         return (LinkedList<CModule>) modules;
     }
 
+    /**
+     * Get the bounding rectangle of the floorplan.
+     * @return bounding rectangle.
+     */
     public Rectangle getBoundingBox() {
         return new Rectangle(min.x(), min.y(), max.x() - min.x(), max.y() - min.y());
     }
 
+    /**
+     * Get the path to which the floorplan's image should be saved.
+     * This is used when creating animations of the progress of the algorithms.
+     * @return a path to a folder.
+     */
     public String getSaveTo() {
         return saveTo;
     }
 
+    /**
+     * Set the path to which the floorplan's image should be saved.
+     * This is used when creating animations of the progress of the algorithms.
+     * @param saveTo a path to a folder.
+     */
     public void setSaveTo(String saveTo) {
         this.saveTo = saveTo;
     }
 
+    /**
+     * Set Floorplan's name.
+     * Used for the GUI.
+     * @param name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Get Floorplan's name.
+     * Used for the GUI.
+     * @return
+     */
     public String getName() {
         return name;
     }

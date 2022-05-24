@@ -15,14 +15,14 @@ public class BTree implements Representation<BTree> {
     private List<BNode<CModule>> nodes;
     private List<List<String>> net;
     private final Random random = new Random();
-    private final Runnable[] operations = new Runnable[] {
-            () -> {
+    private final Runnable[] operations = new Runnable[] { // Operations on BTree
+            () -> { // op1 - rotate a module
                 BNode<CModule> node = nodes.get(random.nextInt(nodes.size()));
                 double height = node.getValue().getHeight();
                 node.getValue().setHeight(node.getValue().getWidth());
                 node.getValue().setWidth(height);
-            }, // op1 - rotate a module
-            () -> {
+            },
+            () -> { // op2 - move node to another place
                 // step 1: deletion - If has left, replace with left (because lefts only have left child).
                 // otherwise, replace with right (no problem since it doesn't have left).
                 BNode<CModule> toMove = nodes.get(random.nextInt(nodes.size()));
@@ -76,21 +76,28 @@ public class BTree implements Representation<BTree> {
 
 
 
-            }, // op2 - move node to another place
-            () -> {
+            },
+            () -> { // op3 - swap two nodes
                 BNode<CModule> node = nodes.get(random.nextInt(nodes.size()));
                 BNode<CModule> randNode = nodes.get(random.nextInt(nodes.size()));
                 CModule module = node.getValue();
                 node.setValue(randNode.getValue());
                 randNode.setValue(module);
-            }  // op3 - swap two nodes
+            }
     };
 
 
+    /**
+     * Initialize BTree
+     */
     public BTree() {
         nodes = new LinkedList<>();
     }
 
+    /**
+     * Initialize BTree
+     * @param t another BTree
+     */
     public BTree(BTree t) {
         this();
         if (t.root == null)
@@ -100,6 +107,11 @@ public class BTree implements Representation<BTree> {
         copyTree(t.root, this.root);
     }
 
+    /**
+     * Initialize BTree
+     * @param root root node
+     * @param nodes list of nodes (that have information about their relationships)
+     */
     public BTree(BNode<CModule> root, List<BNode<CModule>> nodes) {
         this.root = root;
         this.nodes = nodes;
@@ -124,16 +136,27 @@ public class BTree implements Representation<BTree> {
         }
     }
 
+    /**
+     * Get the possible operations
+     * @return possible operations (functions)
+     */
     @Override
     public Runnable[] operations() {
         return operations;
     }
 
+    /**
+     * Perturb the tree. Make a random operation.
+     */
     @Override
     public void perturb() {
         operations[random.nextInt(operations.length)].run();
     }
 
+    /**
+     * Pack a Floorplan, randomly
+     * @param floorplan floorplan (positions are considered)
+     */
     @Override
     public void pack(Floorplan floorplan) {
         if (floorplan.getModules().isEmpty())
@@ -141,18 +164,18 @@ public class BTree implements Representation<BTree> {
 
         nodes = new LinkedList<>();
         Floorplan copyFloorplan = new Floorplan(floorplan);
-        Queue<CModule> modules = copyFloorplan.getModulesQueue();
+        Queue<CModule> modules = copyFloorplan.getModulesQueue(); // put modules in a queue
 
         BNode<CModule> beforeTree = new BNode<>(null, null);
         BNode<CModule> pos = beforeTree;
         double minimumWidth = (modules.size() / 2. * modules.peek().getWidth());
         double widthBound = Math.random() * (Math.sqrt(copyFloorplan.area()) - minimumWidth) + minimumWidth;
-        while (!modules.isEmpty()) {
+        while (!modules.isEmpty()) { // start packing going right
             pos.setRight(new BNode<>(modules.poll(), pos));
             pos = pos.getRight();
             nodes.add(pos);
             double width = pos.getValue().getWidth();
-            widthBound = packLeft(pos, width, widthBound, modules);
+            widthBound = packLeft(pos, width, widthBound, modules); // pack going left
         }
 
         this.net = floorplan.getNameNet();
@@ -160,6 +183,14 @@ public class BTree implements Representation<BTree> {
         this.root.setParent(null);
     }
 
+    /**
+     * Helper to the pack method. Packs a series of modules in a left branch.
+     * @param pos current node
+     * @param width current width (of nodes on this branch)
+     * @param widthBound width limit
+     * @param modules queue of modules
+     * @return total width taken by the branch of modules (should be a bit more than widthBound)
+     */
     private double packLeft(BNode<CModule> pos, double width, double widthBound, Queue<CModule> modules) {
         if (modules.isEmpty() || width + modules.peek().getWidth() > widthBound)
             return width;
@@ -170,7 +201,7 @@ public class BTree implements Representation<BTree> {
     }
 
     /**
-     * Unpack a B* Tree to a floorplan, based on the relative position of the left-bottom module (0, 0).
+     * Unpack a Binary tree to a floorplan, based on the relative position of the left-bottom module (0, 0).
      * @return a floorplan with meaningful positions
      */
     @Override
@@ -185,11 +216,20 @@ public class BTree implements Representation<BTree> {
         return result;
     }
 
+    /**
+     * Clone the current BTree, this is a deep copy.
+     * @return a new BTree.
+     */
     @Override
     public BTree copy() {
         return new BTree(this);
     }
 
+    /**
+     * Serialize the BTree and save the result in a file.
+     * @param path path to file.
+     * @throws IOException
+     */
     @Override
     public void save(String path) throws IOException {
         IOManager.saveList(path, nodes, (node) ->
@@ -199,6 +239,12 @@ public class BTree implements Representation<BTree> {
                 + node.getValue().serialize());
     }
 
+    /**
+     * Load serialized tree from a file and deserialize it.
+     * @param path path to file.
+     * @return a new BTree instance
+     * @throws FileNotFoundException
+     */
     public static BTree loadTree(String path) throws FileNotFoundException {
         List<String[]> references = new LinkedList<>();
         List<BNode<CModule>> nodes = IOManager.loadList(path, (t) -> {
@@ -237,7 +283,8 @@ public class BTree implements Representation<BTree> {
     }
 
     /**
-     * Get a name to CModule map, with the ORIGINAL CModules!
+     * Get a name to CModule map, with the ORIGINAL CModules! (not their copies)
+     * Used for the Crossover operation
      * @return name to CModule map
      */
     @Override
@@ -248,6 +295,10 @@ public class BTree implements Representation<BTree> {
         return modulesByNames;
     }
 
+    /**
+     * Serialize the BTree
+     * @return serialized string
+     */
     @Override
     public String serialize() {
 
@@ -261,6 +312,12 @@ public class BTree implements Representation<BTree> {
         return text.toString();
     }
 
+    /**
+     * Helper to serialize a left branch
+     * @param pos current node
+     * @param text the serialized string
+     * @param first is this the first node of the branch.
+     */
     private void serializeLeftBranch(BNode<CModule> pos, StringBuilder text, boolean first) {
         if (pos == null) {
             text.append("|");
@@ -274,11 +331,23 @@ public class BTree implements Representation<BTree> {
         serializeLeftBranch(pos.getLeft(), text, false);
     }
 
+    /**
+     * Deserialize a BTree.
+     * @param text serialized string
+     * @param modulesByNames names-to-CModules map.
+     * @return a new BTree.
+     */
     @Override
     public BTree deserialize(String text, HashMap<String, CModule> modulesByNames) {
         return deserializeBTree(text, modulesByNames);
     }
 
+    /**
+     * Deserialize a BTree.
+     * @param text serialized string
+     * @param modulesByNames names-to-CModules map.
+     * @return a new BTree.
+     */
     public static BTree deserializeBTree(String text, HashMap<String, CModule> modulesByNames) {
         List<BNode<CModule>> nodes = new LinkedList<>();
 
@@ -302,6 +371,12 @@ public class BTree implements Representation<BTree> {
         return new BTree(rightBranch.get(0), nodes);
     }
 
+    /**
+     * Build a branch, either a left branch or a right branch.
+     * Used for deserialization.
+     * @param nodes list of nodes.
+     * @param goLeft go left or right.
+     */
     private static void buildBranch(ArrayList<BNode<CModule>> nodes, boolean goLeft) {
         if (nodes.size() <= 1) // no branch or one node => no need to make connections
             return;
@@ -316,6 +391,11 @@ public class BTree implements Representation<BTree> {
         }
     }
 
+    /**
+     * Randomly pack a Floorplan instance into a BTree representation.
+     * @param floorplan floorplan.
+     * @return a new BTree.
+     */
     public static BTree packFloorplan(Floorplan floorplan) {
         BTree tree = new BTree();
         tree.pack(floorplan);

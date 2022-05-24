@@ -10,6 +10,10 @@ public class RouletteSelection<T extends Representation<T>> implements Selection
     private NavigableMap<Double, T> rouletteWheel;
     private double total = 0;
 
+    /**
+     * Perform selection, pick two parents
+     * @return
+     */
     @Override
     public List<T> select() {
         T t1 = next();
@@ -20,11 +24,20 @@ public class RouletteSelection<T extends Representation<T>> implements Selection
         return Arrays.asList(t1, t2);
     }
 
+    /**
+     * Pick one parent
+     * @return
+     */
     private T next() {
         double value = random.nextDouble() * total;
         return rouletteWheel.higherEntry(value).getValue();
     }
 
+    /**
+     * Update the population and their fitness values
+     * @param population population
+     * @param fitness a solution-to-fitness map
+     */
     @Override
     public void updatePopulation(ArrayList<T> population, HashMap<T, Double> fitness) {
         total = 0;
@@ -42,6 +55,10 @@ public class RouletteSelection<T extends Representation<T>> implements Selection
         }
     }
 
+    /**
+     * Get name of selection
+     * @return
+     */
     @Override
     public String getName() {
         return "Roulette Wheel Selection";

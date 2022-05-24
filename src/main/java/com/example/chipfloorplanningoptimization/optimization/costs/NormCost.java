@@ -35,6 +35,10 @@ public class NormCost<T extends Representation<T>> implements Cost<T> {
         prepareForOptimization(initialSolution);
     }
 
+    /**
+     * Happens before optimization starts
+     * @param initialSolution
+     */
     @Override
     public void prepareForOptimization(T initialSolution) {
         // calculate Anorm and Wnorm
@@ -67,29 +71,55 @@ public class NormCost<T extends Representation<T>> implements Cost<T> {
         return evalByAreaAndWireLength(floorplan.area(), floorplan.totalWireLength());
     }
 
+    /**
+     * Is the cost function prepared
+     * @return
+     */
     @Override
     public boolean isReady() {
         return Anorm > -1;
     }
 
+    /**
+     * Evaluate by area and wire length
+     * @param area area
+     * @param wireLength total wire length
+     * @return
+     */
     private double evalByAreaAndWireLength(double area, double wireLength) {
         return alpha * (area / Anorm) + (1 - alpha) * (wireLength / Wnorm);
     }
 
+    /**
+     * Get the value of alpha (weight)
+     * @return alpha
+     */
     public double getAlpha() {
         return alpha;
     }
 
+    /**
+     * Get minimum value possible
+     * @return
+     */
     @Override
     public double getMinimumPossible() {
         return evalByAreaAndWireLength(minArea, 0); // TODO: complete this
     }
 
+    /**
+     * Get a description of parameters
+     * @return
+     */
     @Override
     public String paramsDescription() {
         return "=> Cost weight (alpha): " + alpha + "\n=> Anorm: " + Anorm + "\n=> Wnorm: " + Wnorm;
     }
 
+    /**
+     * Get the name of the Cost function
+     * @return
+     */
     @Override
     public String getName() {
         return "Norm Cost";

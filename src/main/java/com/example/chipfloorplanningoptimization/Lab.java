@@ -25,34 +25,22 @@ import static com.example.chipfloorplanningoptimization.Utils.*;
 
 public class Lab {
 
+    /**
+     * This is the main method of this project.
+     * It is recommended to perform experiments inside this method.
+     * @return an array of Floorplans to be sent to the GUI.
+     */
     public static Floorplan[] lab() throws IOException {
-        Floorplan fileFloorplan = getFloorplanFromFile("n30.txt", "nets30.txt");
-        BTree original = BTree.packFloorplan(fileFloorplan);
-//        BTree original = createInitialSolution();
 
-        Cost<BTree> squareCost = new SquareCost<>(0.6, 200);
-        Mutation<BTree> mutation = new AdaptingMutation<>(0.001, 0.001, 2);
-        GeneticAlgorithm<BTree> GA = new GeneticAlgorithm<>(5000,
-                4000, squareCost, new ReciprocalFitness<>(), mutation);
+        BTree tree1 = createInitialSolution();
+        tree1.perturb();
 
-        NormCost<BTree> normCost = new SquareCost<>(0.6, 200);
-        SimulatedAnnealing<BTree> SA = new SimulatedAnnealing<>(100000,
-                0.999,0.000001,0.9999, normCost);
-//        SA.setDefaultCoolingSchedule(0.9);
+        BTree tree2 = createInitialSolution();
+        tree2.perturb();
 
-        Cost<BTree> deadAreaCost = new DeadAreaCost<>();
-        Cost<BTree> dsCost = new SquareCost<>(0.6, 200);
-        DumbSearch<BTree> DS1 = new DumbSearch<>(dsCost);
+        Floorplan loaded = BTree.packFloorplan(getFloorplanFromFile("n30.txt", "nets30.txt")).unpack();
 
-        DumbSearch<BTree> DS2 = new DumbSearch<>(deadAreaCost, false);
-
-        Experiment<BTree> ex = new Experiment<>(GA, DS1, DS2);
-
-        BTree optimized = ex.run(original, "n30");
-
-        return ex.progress();
-//        return getProgress("src/main/data/Genetic Algorithm-Dumb Search/2022-03-26/ex #0/progress");
-//        return new Floorplan[] {loadSolution("src/main/data/Genetic Algorithm/2022-03-25/ex #1/n100-result.txt")};
+        return new Floorplan[] {tree1.unpack(), tree2.unpack(), loaded};
     }
 
     private static void example1() {
@@ -86,14 +74,14 @@ public class Lab {
         BTree initialSolution = createInitialSolution();
 
         // 1.1 Creating a NormCost function
-        Cost<BTree> normCost = new NormCost<>(0.5, 200, initialSolution);
+        NormCost<BTree> normCost = new NormCost<>(0.5, 200, initialSolution);
 
         // 1.2 Creating a DeadAreaCost function
         Cost<BTree> deadAreaCost = new DeadAreaCost<>(initialSolution);
 
         // 2.1 Creating a Simulated Annealing optimizer
         Optimizer<BTree> SA = new SimulatedAnnealing<>(100,
-                0.99, 0.001, 0.99, (NormCost<BTree>) normCost);
+                0.99, 0.001, 0.99, normCost);
 
         // 2.2 Creating a Genetic Algorithm optimizer
         GeneticAlgorithm<BTree> GA = new GeneticAlgorithm<>(10000,

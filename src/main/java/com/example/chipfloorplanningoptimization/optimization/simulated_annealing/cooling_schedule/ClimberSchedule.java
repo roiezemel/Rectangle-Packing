@@ -4,8 +4,8 @@ public class ClimberSchedule implements CoolingSchedule {
 
     private static final int bigNumber = 1000000000;
     private double prevLowestCost;
-    private double r;
-    private int jumpTime;
+    private final double r;
+    private final int jumpTime;
     private int prevTime;
 
     /**
@@ -17,6 +17,16 @@ public class ClimberSchedule implements CoolingSchedule {
         this.jumpTime = plainTravelTime;
     }
 
+    /**
+     * Get next Temperature
+     * @param T current temperature
+     * @param avgCostChange average cost change
+     * @param time current time
+     * @param avgCost average cost
+     * @param lowestCost lowest cost found
+     * @param rejections number of rejections
+     * @return next temperature
+     */
     @Override
     public double next(double T, double avgCostChange, int time, double avgCost, double lowestCost, int rejections) {
         if (prevTime > time) // in case optimization restarted
@@ -34,6 +44,10 @@ public class ClimberSchedule implements CoolingSchedule {
         return r * T;
     }
 
+    /**
+     * Get schedule's name
+     * @return
+     */
     @Override
     public String getName() {
         return "Climber Schedule";

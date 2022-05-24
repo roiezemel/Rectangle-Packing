@@ -7,6 +7,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ReciprocalFitness<T extends Representation<T>> implements FitnessFunction<T> {
+
+    /**
+     * Apply reciprocal fitness
+     * @param population population of solutions
+     * @param cost Cost function
+     * @return map between solutions and their fitness values
+     */
     @Override
     public HashMap<T, Double> apply(ArrayList<T> population, Cost<T> cost) {
         HashMap<T, Double> fitness = new HashMap<>();
@@ -16,6 +23,10 @@ public class ReciprocalFitness<T extends Representation<T>> implements FitnessFu
         return fitness;
     }
 
+    /**
+     * Get name of fitness function
+     * @return
+     */
     @Override
     public String getName() {
         return "Reciprocal Fitness";

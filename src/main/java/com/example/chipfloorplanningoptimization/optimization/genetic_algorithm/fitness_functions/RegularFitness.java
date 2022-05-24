@@ -9,7 +9,12 @@ import java.util.HashMap;
 
 public class RegularFitness<T extends Representation<T>> implements FitnessFunction<T> {
 
-
+    /**
+     * Apply regular fitness
+     * @param population population of solutions
+     * @param cost Cost function
+     * @return map between solutions and their fitness values
+     */
     @Override
     public HashMap<T, Double> apply(ArrayList<T> population, Cost<T> cost) {
         ArrayList<Double> costs = new ArrayList<>(population.size());
@@ -23,6 +28,10 @@ public class RegularFitness<T extends Representation<T>> implements FitnessFunct
         return fitness;
     }
 
+    /**
+     * Get name of fitness function
+     * @return
+     */
     @Override
     public String getName() {
         return "Regular Fitness";

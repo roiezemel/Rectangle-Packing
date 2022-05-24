@@ -7,14 +7,26 @@ import java.util.function.Function;
 
 public class OptimizationLogger {
 
-    private FileWriter writer;
+    private final FileWriter writer;
     private final Function<double[], String> logger;
 
+    /**
+     *
+     * Initialize Logger
+     * @param directoryPath path to experiment folder
+     * @param name name of csv file
+     * @param logger a function that translates an array of metrics (doubles) to a string
+     * @throws IOException
+     */
     public OptimizationLogger(String directoryPath, String name, Function<double[], String> logger) throws IOException {
         this.writer = new FileWriter(directoryPath + "/" + name + ".csv");
         this.logger = logger;
     }
 
+    /**
+     * Write values to file
+     * @param values array of values
+     */
     public void log(double... values) {
         try {
             writer.write(logger.apply(values) + "\n");
@@ -23,6 +35,10 @@ public class OptimizationLogger {
         }
     }
 
+    /**
+     * Close the file
+     * @throws IOException
+     */
     public void close() throws IOException {
         writer.close();
     }

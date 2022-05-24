@@ -16,9 +16,16 @@ import java.util.regex.Pattern;
 public class IOManager {
 
     /*
-        This class takes care of managing the input/output files
+        This class takes care of managing the data files form resources folder
      */
 
+    /**
+     * Parse blocks file and a net file to create a Floorplan instance
+     * @param blocksFile block file
+     * @param netFile net file
+     * @return Floorplan
+     * @throws FileNotFoundException
+     */
     public static Floorplan extractBlocksToFloorplan(File blocksFile, File netFile) throws FileNotFoundException {
         if (blocksFile == null)
             return null;
@@ -61,6 +68,12 @@ public class IOManager {
         return map;
     }
 
+    /**
+     * Parse the net file
+     * @param file net file
+     * @return list containing lists of names of connected modules
+     * @throws FileNotFoundException
+     */
     private static List<List<String>> parseNet(File file) throws FileNotFoundException {
         Scanner myReader = new Scanner(file);
         List<List<String>> result = new LinkedList<>();
@@ -84,6 +97,11 @@ public class IOManager {
         return result;
     }
 
+    /**
+     * Parse a single rectangle's information from a blocks file
+     * @param blockLine string containing the rectangle information
+     * @return a rectangle
+     */
     private static Rectangle parseRect(String blockLine) {
         String regex = "\\(\\d+, \\d+\\)";
         Pattern pattern = Pattern.compile(regex);
@@ -108,6 +126,14 @@ public class IOManager {
         return new Rectangle(vertices[0][0], vertices[0][1], width, height);
     }
 
+    /**
+     * Write a list into a new file.
+     * @param path path to the file
+     * @param list list of items
+     * @param oneLineSerialize function to serialize an item (should produce only one line, no enters)
+     * @param <T> any type
+     * @throws IOException
+     */
     public static <T> void saveList(String path, List<? extends T> list, Function<? super T, String> oneLineSerialize) throws IOException {
         FileWriter writer = new FileWriter(path);
         StringBuilder text = new StringBuilder();
@@ -122,6 +148,14 @@ public class IOManager {
         writer.close();
     }
 
+    /**
+     * Load a list from a file.
+     * @param path path to the file
+     * @param deserialize deserialize function to be applied for each line
+     * @param <T> any type
+     * @return list of items
+     * @throws FileNotFoundException
+     */
     public static <T> List<T> loadList(String path, Function<String, ? extends T> deserialize) throws FileNotFoundException {
         Scanner myReader = new Scanner(new File(path));
         List<T> list = new LinkedList<>();

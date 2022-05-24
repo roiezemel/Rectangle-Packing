@@ -13,20 +13,36 @@ public class DataVisualizer {
   private final ArrayList<XYChart> charts;
   private final String folderPath;
 
+    /**
+     * Initialize DataVisualizer
+     * @param folderPath path to data folder
+     */
   public DataVisualizer(String folderPath) {
     charts = new ArrayList<>();
     this.folderPath = folderPath;
   }
 
+    /**
+     * Add a new chart
+     * @param chart
+     */
  public void addChart(XYChart chart) {
       chart.getStyler().setLegendVisible(false);
    charts.add(chart);
  }
 
+    /**
+     * Add a chart from CSV file
+     * @param fileName
+     */
  public void addFromCSV(String fileName) {
      addChart(makeCSVChart(folderPath + "/" + fileName + ".csv"));
  }
 
+    /**
+     * Display all sequence of charts
+     * @param matrix whether to show the charts in a single window (in a matrix)
+     */
  public void displayCharts(boolean matrix) {
     if (!matrix)
       for (XYChart chart : charts)
@@ -42,28 +58,63 @@ public class DataVisualizer {
     }
  }
 
+    /**
+     * Save PNG files of the graphs
+     * @throws IOException
+     */
  public void saveCharts() throws IOException {
     for (XYChart chart : charts)
      BitmapEncoder.saveBitmap(chart, folderPath + "/" + chart.getTitle(), BitmapEncoder.BitmapFormat.PNG);
  }
 
+    /**
+     * Display a single chart
+     * @param chart
+     */
  public static void plot(XYChart chart) {
    new SwingWrapper<>(chart).displayChart();
  }
 
+    /**
+     * Make a new chart.
+     * @param xValues x values
+     * @param yValues y values
+     * @param title title
+     * @param xTitle x title
+     * @param yTitle y title
+     * @return XYChart
+     */
   public static XYChart makeChart(
       double[] xValues, double[] yValues, String title, String xTitle, String yTitle) {
     return QuickChart.getChart(title, xTitle, yTitle, title, xValues, yValues);
   }
 
+    /**
+     * Make a new chart.
+     * @param xValues x values
+     * @param yValues y values
+     * @param title title
+     * @return XYChart
+     */
   public static XYChart makeChart(double[] xValues, double[] yValues, String title) {
     return makeChart(xValues, yValues, title, "X", "Y");
   }
 
+    /**
+     * Make a new chart
+     * @param xValues x values
+     * @param yValues y values
+     * @return XYChart
+     */
   public static XYChart makeChart(double[] xValues, double[] yValues) {
     return makeChart(xValues, yValues, " ");
   }
 
+    /**
+     * Make chart out of a CSV file
+     * @param path path to CSV file
+     * @return XYChart
+     */
   public static XYChart makeCSVChart(String path) {
     CSVImporter.SeriesData data =
         CSVImporter.getSeriesDataFromCSVFile(path, CSVImporter.DataOrientation.Columns);
